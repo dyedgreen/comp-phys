@@ -1,2 +1,5 @@
 # Ignore problem builds
 **main
+
+# Ignore outputs
+**.png
