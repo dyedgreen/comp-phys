@@ -7,6 +7,9 @@ import (
 	"gonum.org/v1/plot/plotter"
 	"gonum.org/v1/plot/plotutil"
 	"gonum.org/v1/plot/vg"
+
+	"github.com/dyedgreen/comp-phys/pkg/interpolate"
+	"github.com/dyedgreen/comp-phys/pkg/util"
 )
 
 const (
@@ -34,7 +37,11 @@ func plotLines(title, file string, lines ...interface{}) error {
 	if err := plotutil.AddScatters(p, "data", lines[0]); err != nil {
 		return err
 	}
-	if err := plotutil.AddLines(p, "lagrange", lines[1]); err != nil {
+	lin, _ := interpolate.NewLinearRange(util.XYToSlice(lines[0].(plotter.XYs)))
+	if err := plotutil.AddLines(p, "lagrange", lines[1], "linear", plotter.NewFunction(func(x float64) (y float64) {
+		y, _ = lin.Eval(x)
+		return
+	})); err != nil {
 		return err
 	}
 	if err := p.Save(8*vg.Inch, 5*vg.Inch, file); err != nil {
