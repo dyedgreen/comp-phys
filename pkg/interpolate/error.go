@@ -5,6 +5,7 @@ type InterploationError int
 const (
 	ErrorOutOfBounds InterploationError = iota
 	ErrorDimMissmatch
+	ErrorBadSpline
 )
 
 func (err InterploationError) Error() string {
@@ -12,8 +13,10 @@ func (err InterploationError) Error() string {
 	case ErrorOutOfBounds:
 		return "out of bounds error"
 	case ErrorDimMissmatch:
-		return "dimensional miss match"
+		return "dimensional miss match error"
+	case ErrorBadSpline:
+		return "spline error"
 	default:
-		return "unknown error"
+		return "error"
 	}
 }

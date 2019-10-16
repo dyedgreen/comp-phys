@@ -37,9 +37,9 @@ func plotLines(title, file string, lines ...interface{}) error {
 	if err := plotutil.AddScatters(p, "data", lines[0]); err != nil {
 		return err
 	}
-	lin, _ := interpolate.NewLinearRange(util.XYToSlice(lines[0].(plotter.XYs)))
-	if err := plotutil.AddLines(p, "lagrange", lines[1], "linear", plotter.NewFunction(func(x float64) (y float64) {
-		y, _ = lin.Eval(x)
+	rng, _ := interpolate.NewSplineRange(util.XYToSlice(lines[0].(plotter.XYs)))
+	if err := plotutil.AddLines(p, "lagrange", lines[1], "spline", plotter.NewFunction(func(x float64) (y float64) {
+		y, _ = rng.Eval(x)
 		return
 	})); err != nil {
 		return err
