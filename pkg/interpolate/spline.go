@@ -6,7 +6,7 @@ type SplineRange struct {
 	yy []float64
 }
 
-// NewSplineRange creates a spline range. The data passed is
+// NewSplineRange creates a cubic spline range. The data passed is
 // not copied, but referenced directly. The first two values
 // passed after xs and ys are used as the initial guess (if not
 // given, 0 is used).

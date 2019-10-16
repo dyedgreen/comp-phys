@@ -68,10 +68,6 @@ func shitLagrange(data plotter.XYs, x float64) float64 {
 	return y
 }
 
-func cubicSpline(data plotter.XYs, x float64) float64 {
-	return 0 // TODO
-}
-
 func main() {
 	// Plot the data
 	data := generateData()

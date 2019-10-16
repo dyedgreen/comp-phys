@@ -9,6 +9,6 @@ fmt:
 
 zip:
 	rm comp-phys.zip || :
-	zip -r comp-phys.zip .
+	zip --symlinks -r comp-phys.zip .
 
 .PHONY: zip
