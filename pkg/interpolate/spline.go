@@ -19,32 +19,32 @@ func NewSplineRange(xs, ys []float64, boundary ...float64) (*SplineRange, error)
 	// Set the left bound
 	if len(boundary) > 0 {
 		yy[0] = -0.5
-		u[0] = (3 / (xs[1] - xs[0])) * ((ys[1] - ys[0]) / (xs[1] - xs[0]) - boundary[0])
+		u[0] = (3 / (xs[1] - xs[0])) * ((ys[1]-ys[0])/(xs[1]-xs[0]) - boundary[0])
 	} else {
 		// Use natural left bound
 		yy[0], u[0] = 0, 0
 	}
 	// Decompose tridiagonal matrix (see Numerical Recipes)
-	for i := 1; i < len(yy)-1; i ++ {
+	for i := 1; i < len(yy)-1; i++ {
 		s := (xs[i] - xs[i-1]) / (xs[i+1] - xs[i-1])
-		p := s * yy[i-1] + 2
-		yy[i] = (s-1) / p
-		u[i] = (ys[i+1] -ys[i]) / (xs[i+1] - xs[i]) - (ys[i] - ys[i-1]) / (xs[i] - xs[i-1])
-		u[i] = (6 * u[i] / (xs[i+1] - xs[i-1]) - s * u[i-1]) / p
+		p := s*yy[i-1] + 2
+		yy[i] = (s - 1) / p
+		u[i] = (ys[i+1]-ys[i])/(xs[i+1]-xs[i]) - (ys[i]-ys[i-1])/(xs[i]-xs[i-1])
+		u[i] = (6*u[i]/(xs[i+1]-xs[i-1]) - s*u[i-1]) / p
 	}
 	// Set the right bound
 	var un, yn float64
 	if len(boundary) > 1 {
 		yn = -0.5
-		un = (3 / (xs[len(yy)-1] - xs[len(yy)-2])) * (boundary[1] - (ys[len(yy)-1] - ys[len(yy)-2]) / (xs[len(yy)-1] - xs[len(yy)-2]))
+		un = (3 / (xs[len(yy)-1] - xs[len(yy)-2])) * (boundary[1] - (ys[len(yy)-1]-ys[len(yy)-2])/(xs[len(yy)-1]-xs[len(yy)-2]))
 	} else {
 		// Use natural left bound
 		un, un = 0, 0
 	}
-	yy[len(yy)-1] = (un - yn * u[len(yy) - 2]) / (yn * yy[len(yy)-2] + 1)
+	yy[len(yy)-1] = (un - yn*u[len(yy)-2]) / (yn*yy[len(yy)-2] + 1)
 	// Back-substitute tridiagonal matrix
-	for i := len(yy)-2; i >= 0; i -- {
-		yy[i] = yy[i] * yy[i+1] + u[i]
+	for i := len(yy) - 2; i >= 0; i-- {
+		yy[i] = yy[i]*yy[i+1] + u[i]
 	}
 	// Assemble spline range
 	return &SplineRange{xs, ys, yy}, nil
@@ -94,5 +94,5 @@ func (r *SplineRange) Eval(x float64) (y float64, err error) {
 	}
 	a := (r.xs[top] - x) / h
 	b := (x - r.xs[bot]) / h
-	return a * r.ys[bot] + b * r.ys[top] + ((a*a*a - a) * r.yy[bot] + (b*b*b - b) * r.yy[top]) * (h*h) / 6, nil
+	return a*r.ys[bot] + b*r.ys[top] + ((a*a*a-a)*r.yy[bot]+(b*b*b-b)*r.yy[top])*(h*h)/6, nil
 }
