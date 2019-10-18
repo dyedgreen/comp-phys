@@ -25,9 +25,13 @@ assignment:
 clean:
 	rm $(shell find ./problems -not -name "*.go" -type f) || :
 	rm $(shell find ./assignment -not -name "*.go" -and -not -name "*.c" -and -not -name "*.h" -type f) || :
+	rm $(shell find ./pdf -not -name "*.tex" -type f) || :
+
+pdf:
+	cd ./pdf && pdflatex ./assignment.tex && pdflatex ./assignment.tex
 
 zip:
 	rm comp-phys.zip || :
 	zip --symlinks -r comp-phys.zip .
 
-.PHONY: all fmt test clean zip $(ASSIGNMENTS)
+.PHONY: all fmt test clean pdf zip $(ASSIGNMENTS)
