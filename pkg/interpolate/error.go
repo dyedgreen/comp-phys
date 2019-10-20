@@ -8,6 +8,7 @@ const (
 	ErrorBadSpline
 )
 
+// Error implements error.
 func (err InterploationError) Error() string {
 	switch err {
 	case ErrorOutOfBounds:

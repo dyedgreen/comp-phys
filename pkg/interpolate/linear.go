@@ -5,8 +5,8 @@ type LinearRange struct {
 	ys []float64
 }
 
-// NewLinearRange creates a linear range. The data passed is
-// not copied, but referenced directly.
+// NewLinearRange creates a linearly interpolating range.
+// The data passed is not copied, but referenced directly.
 func NewLinearRange(xs, ys []float64) (*LinearRange, error) {
 	if len(ys) < 1 || len(ys) != len(xs) {
 		return nil, ErrorDimMissmatch

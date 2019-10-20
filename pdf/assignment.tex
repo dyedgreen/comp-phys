@@ -24,15 +24,15 @@
   is the one that would be expected for an 80-bit extended precision floating point (IEEE 754).
 
   \subsection{}
-  Go supports IEEE 32 and 64 bit floating point numbers. According to the Go language standard, the IEEE
-  (and compiler), these have the following values for $a$:
+  Go supports IEEE 32 and 64 bit floating point numbers. According to the Go language specification
+  (and compiler), and the IEEE standard, these have the following values for $a$:
   \begin{itemize}
     \item \texttt{float32} $a = 2^{1-127-23} \approx 1.401298464324817070923729583289916131280 \times 10^{-45}$
     \item \texttt{float64} $a = 2^{1-1023-52} \approx 4.940656458412465441765687928682213723651 \times 10^{-324}$
   \end{itemize}
 
   Note that Go does not support extended precision floating point values (although they can be used through
-  CGo, as is done for question (a)). These values match the expected values (where 'expected' means 'values
+  CGo, as is done for question (a)). These values match the expected values (where `expected' means `values
   they need to be to be IEEE compliant').
 
 \section{}

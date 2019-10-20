@@ -5,6 +5,7 @@ import (
 	"testing"
 )
 
+// Some very basic unit tests for linear interpolation
 func TestLinear(t *testing.T) {
 	xs := []float64{0, 1, 0, 1, 0, 1, 1, 2}
 	ys := []float64{0, 1, 1, 1, 1, 0, 2, 4}

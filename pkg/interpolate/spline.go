@@ -8,8 +8,8 @@ type SplineRange struct {
 
 // NewSplineRange creates a cubic spline range. The data passed is
 // not copied, but referenced directly. The first two values
-// passed after xs and ys are used as the initial guess (if not
-// given, 0 is used).
+// passed after xs and ys are used as the initial guess (either is not given,
+// natural boundary conditions are used).
 func NewSplineRange(xs, ys []float64, boundary ...float64) (*SplineRange, error) {
 	if len(ys) < 1 || len(ys) != len(xs) {
 		return nil, ErrorDimMissmatch
@@ -38,7 +38,7 @@ func NewSplineRange(xs, ys []float64, boundary ...float64) (*SplineRange, error)
 		yn = -0.5
 		un = (3 / (xs[len(yy)-1] - xs[len(yy)-2])) * (boundary[1] - (ys[len(yy)-1]-ys[len(yy)-2])/(xs[len(yy)-1]-xs[len(yy)-2]))
 	} else {
-		// Use natural left bound
+		// Use natural right bound
 		un, un = 0, 0
 	}
 	yy[len(yy)-1] = (un - yn*u[len(yy)-2]) / (yn*yy[len(yy)-2] + 1)
