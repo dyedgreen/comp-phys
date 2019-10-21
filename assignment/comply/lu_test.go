@@ -1,45 +1,39 @@
 package comply
 
 import (
-	"fmt"
 	"math/rand"
 	"testing"
 
 	"gonum.org/v1/gonum/mat"
 )
 
-// Tests the LU decomposer by comparing the
-// result to LAPACK output
+// Tests the LU decomposer
 func TestLU(t *testing.T) {
 	rand.Seed(42)
-	n := 3
+	n := 20
 	data := make([]float64, n*n)
-	for i := 0; i < 1; i++ {
+	for i := 0; i < 100; i++ {
 		// Generate random matrix
 		for j := range data {
 			data[j] = rand.Float64() * 10
+			if rand.Float64() > 0.5 {
+				data[j] *= -1
+			}
 		}
 		m := mat.NewDense(n, n, data)
+
+		// Compute LU decomposition
 		lu, err := NewLU(m)
 		if err != nil {
 			t.Error(err.Error())
+			continue
 		}
-		luLAPACK := mat.LU{}
-		luLAPACK.Factorize(m)
 
-		// fix this ...
-		//fmt.Println(lu.decomp)
-		//fmt.Println(lu.L().At(2, 0), luLAPACK.LTo(mat.NewTriDense(n, mat.Lower, nil)).At(2, 0))
-		res := mat.NewDense(n, n, nil)
-		res.Mul(lu.L(), lu.U())
-		fmt.Println(res)
-		fmt.Println(m)
-
-		if !mat.EqualApprox(lu.L(), luLAPACK.LTo(mat.NewTriDense(n, mat.Lower, nil)), 1e-10) {
-			t.Error("L decomposition not equal")
-		}
-		if !mat.EqualApprox(lu.U(), luLAPACK.UTo(mat.NewTriDense(n, mat.Upper, nil)), 1e-10) {
-			t.Error("U decomposition not equal")
+		// Reconstruct original matrix
+		recon := &mat.Dense{}
+		recon.Mul(lu.L(), lu.U())
+		if !mat.EqualApprox(m, recon, 1e-10) {
+			t.Error("LU != m after decomposition")
 		}
 	}
 }

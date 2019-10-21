@@ -39,14 +39,14 @@ func NewLU(m mat.Matrix) (*LU, error) {
 		for i := 0; i <= j; i++ {
 			var sum float64
 			for k := 0; k < i; k++ {
-				sum += L.At(i, k) + U.At(k, j)
+				sum += L.At(i, k) * U.At(k, j)
 			}
 			decomp.Set(i, j, m.At(i, j)-sum)
 		}
 		for i := j + 1; i < N; i++ {
 			var sum float64
 			for k := 0; k < j; k++ {
-				sum += L.At(i, k) + U.At(k, j)
+				sum += L.At(i, k) * U.At(k, j)
 			}
 			if U.At(j, j) == 0 {
 				return nil, errors.New("matrix is singular")
