@@ -1,4 +1,4 @@
-# Code for Computational Physics (fall of 2019)
+# Code for Computational Physics at Imperial (fall of 2019)
 
 ## Build instructions
 

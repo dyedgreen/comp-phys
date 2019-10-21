@@ -1,8 +1,12 @@
 package util
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/dyedgreen/comp-phys/pkg/interpolate"
 
+	"gonum.org/v1/gonum/mat"
 	"gonum.org/v1/plot"
 	"gonum.org/v1/plot/plotter"
 )
@@ -31,4 +35,32 @@ func RangeToPlotter(r interpolate.Range) plot.Plotter {
 		XMax:    max,
 		Samples: 1000,
 	}
+}
+
+// MatrixToLaTeX takes a matrix and an element-wise format string
+// and returns LaTeX code for displaying the matrix as a string.
+func MatrixToLaTeX(m mat.Matrix, format string) string {
+	str := strings.Builder{}
+	str.WriteString("\\begin{bmatrix}")
+
+	// Default format string
+	if format == "" {
+		format = "%v"
+	}
+
+	r, c := m.Dims()
+	for i := 0; i < r; i++ {
+		if i > 0 {
+			str.WriteString(" \\\\ ")
+		}
+		for j := 0; j < c; j++ {
+			if j > 0 {
+				str.WriteString(" & ")
+			}
+			str.WriteString(fmt.Sprintf(format, m.At(i, j)))
+		}
+	}
+
+	str.WriteString("\\end{bmatrix}")
+	return str.String()
 }

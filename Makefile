@@ -18,8 +18,10 @@ assignment: fmt
 assignment: test
 assignment: $(ASSIGNMENTS)
 assignment:
-	echo "\nAssignment outputs:\n"
+	echo "\nAssignment Question 1:\n"
 	./assignment/q-1/main
+	echo "\nAssignment Question 2:\n"
+	./assignment/q-2/main
 
 clean:
 	rm $(shell find ./problems -not -name "*.go" -type f) || :

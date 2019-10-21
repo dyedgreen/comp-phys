@@ -1,6 +1,7 @@
 \documentclass[12pt, a4paper]{article}
 
 \usepackage[utf8]{inputenc}
+\usepackage{amsmath}
 
 \title{Computational Physics Assignment Answers}
 \author{Tilman Roeder}
@@ -36,6 +37,23 @@
   they need to be to be IEEE compliant').
 
 \section{}
-  TODO
+  \subsection{}
+  The program can be found in \texttt{/assignment/q-2}. The LU decomposition is implemented in the
+  \texttt{/assignment/comply} package.
+
+  \subsection{}
+  Using our LU decomposition routine, we obtain:
+  \begin{equation}
+    L = \begin{bmatrix}1 & 0 & 0 & 0 & 0 \\ 1 & 1 & 0 & 0 & 0 \\ 0 & 1.125 & 1 & 0 & 0 \\ 0 & 0 & -1.419\cdots & 1 & 0 \\ 0 & 0 & 0 & -1.216\cdots & 1\end{bmatrix}
+  \end{equation}
+  \begin{equation}
+    U = \begin{bmatrix}3 & 1 & 0 & 0 & 0 \\ 0 & 8 & 4 & 0 & 0 \\ 0 & 0 & 15.5 & 10 & 0 \\ 0 & 0 & 0 & 45.193\cdots & -25 \\ 0 & 0 & 0 & 0 & 30.575\cdots\end{bmatrix}.
+  \end{equation}
+
+  Further, we determine:
+  \begin{equation}
+    \det(A) = 514032.
+  \end{equation}
+
 
 \end{document}
