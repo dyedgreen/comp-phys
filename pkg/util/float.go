@@ -3,7 +3,7 @@ package util
 import "math"
 
 const (
-	Epsilon = 1e-40
+	Epsilon = 1e-10
 )
 
 // Approx returns if a and b are

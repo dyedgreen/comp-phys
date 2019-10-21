@@ -15,7 +15,9 @@ func main() {
 	fmt.Println("This computers 'long double' has the following smallest number n > 0:")
 	fmt.Printf("2^(-%v)\n", size)
 	fmt.Println("The go compiler (and spec) tells us that our 32 and 64 floats have the following precision:")
-	fmt.Printf("float32 %1.20e\n", math.SmallestNonzeroFloat32)
-	fmt.Printf("float64 %1.20e\n", math.SmallestNonzeroFloat64)
+	// The Nextafter functions work the same way C.float_acc is implemented.
+	// See https://golang.org/src/math/nextafter.go?s=917:957#L25
+	fmt.Printf("float32 %e\n", math.Nextafter32(1, 2)-1)
+	fmt.Printf("float64 %e\n", math.Nextafter(1, 2)-1)
 	fmt.Println("Go has no support for extended floating point formats (but does provide arbitrary precision\nvia `math/big`).")
 }

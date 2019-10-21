@@ -16,25 +16,27 @@
 \section{}
   \subsection{}
   The program can be found in \texttt{/assignment/q-1}. It reports the smallest floating point number
-  $a$ such that $a > 0$ as:
+  $a$ such that $1 + a > 1$ as\footnotemark{}:
   \begin{equation}
-    a = 2^{-16445} \approx 3.6452 \times 10^{-4951}.
+    a = 2^{-63}.
   \end{equation}
 
   Note that this is for the C numeric type \texttt{long double}, on a 2017 MacBook Pro. This size
   is the one that would be expected for an 80-bit extended precision floating point (IEEE 754).
 
   \subsection{}
-  Go supports IEEE 32 and 64 bit floating point numbers. According to the Go language specification
-  (and compiler), and the IEEE standard, these have the following values for $a$:
+  Go supports IEEE 32 and 64 bit floating point numbers. For these types we find:
   \begin{itemize}
-    \item \texttt{float32} $a = 2^{1-127-23} \approx 1.401298464324817070923729583289916131280 \times 10^{-45}$
-    \item \texttt{float64} $a = 2^{1-1023-52} \approx 4.940656458412465441765687928682213723651 \times 10^{-324}$
+    \item \texttt{float32} $a \approx 1.192093 \times 10^{-7}$
+    \item \texttt{float64} $a \approx 2.220446 \times 10^{-16}$
   \end{itemize}
 
   Note that Go does not support extended precision floating point values (although they can be used through
   CGo, as is done for question (a)). These values match the expected values (where `expected' means `values
   they need to be to be IEEE compliant').
+
+  \footnotetext{Machine $\epsilon$ is also sometimes defined as $\frac{a}{2}$, with a defined as above.
+  The values given for $a$ are valid for the definition given above.}
 
 \section{}
   \subsection{}
@@ -42,18 +44,22 @@
   \texttt{/assignment/comply} package.
 
   \subsection{}
-  Using our LU decomposition routine, we obtain:
+  Using the LU decomposition routine, one can find found:
   \begin{equation}
     L = \begin{bmatrix}1 & 0 & 0 & 0 & 0 \\ 1 & 1 & 0 & 0 & 0 \\ 0 & 1.125 & 1 & 0 & 0 \\ 0 & 0 & -1.419\cdots & 1 & 0 \\ 0 & 0 & 0 & -1.216\cdots & 1\end{bmatrix}
   \end{equation}
   \begin{equation}
     U = \begin{bmatrix}3 & 1 & 0 & 0 & 0 \\ 0 & 8 & 4 & 0 & 0 \\ 0 & 0 & 15.5 & 10 & 0 \\ 0 & 0 & 0 & 45.193\cdots & -25 \\ 0 & 0 & 0 & 0 & 30.575\cdots\end{bmatrix}.
   \end{equation}
+  where $LU = A$, with $A$ being the matrix given in the assignment problem.
 
-  Further, we determine:
+  Further, it can be obtained:
   \begin{equation}
-    \det(A) = 514032.
+    \det(A) = \det(L) \times \det(U) = \det(U) = \prod_{i=1}^5 U_{ii} = 514032.
   \end{equation}
+
+  \subsection{}
+  The solver is implemented in \texttt{/assignment/comply}.
 
 
 \end{document}

@@ -1,10 +1,10 @@
 #ifndef H_FLOAT
 #define H_FLOAT
 
-// Compute the minimum representable number at
-// machine accuracy (using this arch's 'long double')
-// NOTE: No guarantees given by C99 standard as to what
-// precision long double corresponds to.
+// Compute the machine accuracy by computing the
+// accuracy of the `long double` type, which should
+// map to the best floating point natively supported
+// (although there is no guarantees in the standard).
 unsigned long long int float_acc();
 
 #endif

@@ -58,6 +58,39 @@ func NewLU(m mat.Matrix) (*LU, error) {
 	return lu, nil
 }
 
+func (lu *LU) Solve(y mat.Vector) mat.Vector {
+	n, _ := lu.decomp.Dims()
+	if n != y.Len() {
+		panic(errors.New("invalid dimensions for y"))
+	}
+
+	// We will solve LUx=y <=> L(Ux) = y, where Ux = x' by
+	// first solving for x', and then for x.
+	L := lu.L()
+	U := lu.U()
+
+	// Solve for x' using back-substitution on L
+	x := make([]float64, n, n)
+	for i := range x {
+		var sum float64
+		for j := 0; j < i; j++ {
+			sum += L.At(i, j) * x[j]
+		}
+		x[i] = (y.AtVec(i) - sum) / L.At(i, i)
+	}
+
+	// Solve for x using back-substitution on U
+	for i := n - 1; i >= 0; i-- {
+		var sum float64
+		for j := n - 1; j > i; j-- {
+			sum += U.At(i, j) * x[j]
+		}
+		x[i] = (x[i] - sum) / U.At(i, i)
+	}
+
+	return mat.NewVecDense(n, x)
+}
+
 // L returns the lower triangular decomposition
 // matrix.
 func (lu *LU) L() mat.Matrix {
