@@ -31,9 +31,19 @@ func main() {
 		det *= luA.U().At(i, i)
 	}
 
+	// Output for part b)
 	fmt.Printf("The determinant of A is %v.\n", det)
 	fmt.Printf("(Compare this to %v, computed by gonum's `mat.Det()`)\n", mat.Det(A))
 	fmt.Println("Here the decompositions:")
-	fmt.Println("L:", util.MatrixToLaTeX(luA.L(), "%v"))
-	fmt.Println("U:", util.MatrixToLaTeX(luA.U(), "%v"))
+	fmt.Println("L:", util.MatrixToLaTeX(luA.L(), ""))
+	fmt.Println("U:", util.MatrixToLaTeX(luA.U(), ""))
+
+	// Output for part d)
+	y := mat.NewVecDense(5, []float64{2, 5, -4, 8, 9})
+	x := luA.Solve(y)
+	fmt.Println("x:", util.MatrixToLaTeX(x, ""))
+
+	// Output for part e)
+	inv := luA.Invert()
+	fmt.Println("A^-1:", util.MatrixToLaTeX(inv, ""))
 }

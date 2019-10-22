@@ -58,6 +58,7 @@ func NewLU(m mat.Matrix) (*LU, error) {
 	return lu, nil
 }
 
+// Solve solves for x in Ax = LUx = y.
 func (lu *LU) Solve(y mat.Vector) mat.Vector {
 	n, _ := lu.decomp.Dims()
 	if n != y.Len() {
@@ -89,6 +90,26 @@ func (lu *LU) Solve(y mat.Vector) mat.Vector {
 	}
 
 	return mat.NewVecDense(n, x)
+}
+
+// Invert returns A^-1 where A = LU.
+func (lu *LU) Invert() mat.Matrix {
+	n, _ := lu.decomp.Dims()
+	inv := mat.NewDense(n, n, nil)
+	e := mat.NewVecDense(n, nil)
+
+	for i := 0; i < n; i++ {
+		if i > 0 {
+			e.SetVec(i-1, 0)
+		}
+		e.SetVec(i, 1)
+		col := lu.Solve(e)
+		for j := 0; j < n; j++ {
+			inv.Set(j, i, col.AtVec(j))
+		}
+	}
+
+	return inv
 }
 
 // L returns the lower triangular decomposition
