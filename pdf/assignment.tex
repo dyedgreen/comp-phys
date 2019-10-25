@@ -1,7 +1,12 @@
-\documentclass[12pt, a4paper]{article}
+\documentclass[10pt, a4paper]{article}
 
 \usepackage[utf8]{inputenc}
 \usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{cite}
+
+\graphicspath{ {./images/} }
 
 \title{Computational Physics Assignment Answers}
 \author{Tilman Roeder}
@@ -81,11 +86,45 @@
     A^{-1} \approx \begin{bmatrix}0.379\cdots & -0.046\cdots & 0.004\cdots & -0.004\cdots & -0.001\cdots \\ -0.138\cdots & 0.138\cdots & -0.012\cdots & 0.014\cdots & 0.005\cdots \\ 0.027\cdots & -0.027\cdots & 0.024\cdots & -0.028\cdots & -0.011\cdots \\ 0.070\cdots & -0.070\cdots & 0.062\cdots & 0.044\cdots & 0.018\cdots \\ 0.063\cdots & -0.063\cdots & 0.056\cdots & 0.039\cdots & 0.032\cdots\end{bmatrix}
   \end{equation}
 
-% Question 2
+% Question 3
 \section{}
   \subsection{}
   Linear interpolation is implemented in \texttt{/pkg/interpolate}.
 
-  
+  \subsection{}
+  Cubic spline interpolation is implemented in \texttt{/pkg/interpolate}. However this implementation is
+  not fully compliant with the question requirements, so there is an additional (compliant but slower and
+  more memory intensive) implementation in \texttt{/assignment/comply}.
+
+  \subsection{}
+  The data and interpolations are plotted in figure \ref{fig:interpolate}.
+
+  \begin{figure}[h]
+    \centering
+    \includegraphics[width=12cm]{assignment-q-3}
+    \caption{Linear and natural cubic spline interpolation on the given data.}
+    \label{fig:interpolate}
+  \end{figure}
+
+% Question 4
+\section{}
+  \subsection{}
+
+% Question 5
+\section{}
+  \subsection{}
+  The resulting distribution can be seen in figure \ref{fig:uniform}. The used random sampling
+  is ultimately based on \texttt{PCG XSL RR 128/64}, which is a random number generator with
+  very robust statistical properties and small memory requirements\cite{pcg}.
+
+  \begin{figure}[h]
+    \centering
+    \includegraphics[width=12cm]{assignment-q-5-1}
+    \caption{Random samples drawn from a uniform distribution over $[0,1]$.}
+    \label{fig:uniform}
+  \end{figure}
+
+\bibliography{assignment.bib}{}
+\bibliographystyle{plain}
 
 \end{document}

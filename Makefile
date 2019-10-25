@@ -28,21 +28,29 @@ assignment: fmt
 assignment: test
 assignment: $(ASSIGNMENTS)
 assignment:
+	mkdir -p ./pdf/images/
 	echo "\nAssignment Question 1:\n"
 	./assignment/q-1/main
 	echo "\nAssignment Question 2:\n"
 	./assignment/q-2/main
+	echo "\nAssignment Question 3:\n"
+	cd ./assignment/q-3/ && ./main
+	cp ./assignment/q-3/plot.pdf ./pdf/images/assignment-q-3.pdf
+	echo "\nAssignment Question 5:\n"
+	cd ./assignment/q-5/ && ./main
+	cp ./assignment/q-5/plot.pdf ./pdf/images/assignment-q-5-1.pdf
 
 # Remove any generated files
 clean:
 	rm $(shell find ./problems -not -name "*.go" -type f) || :
 	rm $(shell find ./assignment -not -name "*.go" -and -not -name "*.c" -and -not -name "*.h" -type f) || :
-	rm $(shell find ./pdf -not -name "*.tex" -type f) || :
+	rm $(shell find ./pdf -not -name "*.tex" -and -no -name "*.bib" -type f) || :
 	rm comp-phys.zip testcov.log || :
 
 # Build assignment report
+pdf: assignment
 pdf:
-	cd ./pdf && pdflatex ./assignment.tex && pdflatex ./assignment.tex
+	cd ./pdf && pdflatex ./assignment.tex && bibtex ./assignment.aux && pdflatex ./assignment.tex
 
 # Build zip for submission
 zip:
