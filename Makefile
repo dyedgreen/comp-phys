@@ -38,7 +38,9 @@ assignment:
 	cp ./assignment/q-3/plot.pdf ./pdf/images/assignment-q-3.pdf
 	echo "\nAssignment Question 5:\n"
 	cd ./assignment/q-5/ && ./main
-	cp ./assignment/q-5/plot.pdf ./pdf/images/assignment-q-5-1.pdf
+	cp ./assignment/q-5/plot-a.pdf ./pdf/images/assignment-q-5-a.pdf
+	cp ./assignment/q-5/plot-b.pdf ./pdf/images/assignment-q-5-b.pdf
+	cp ./assignment/q-5/plot-c.pdf ./pdf/images/assignment-q-5-c.pdf
 
 # Remove any generated files
 clean:

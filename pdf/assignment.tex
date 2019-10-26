@@ -5,6 +5,7 @@
 \usepackage{graphicx}
 \usepackage{hyperref}
 \usepackage{cite}
+\usepackage{fullpage}
 
 \graphicspath{ {./images/} }
 
@@ -14,6 +15,8 @@
 
 \renewcommand\thesection{Question \arabic{section}}
 \renewcommand\thesubsection{\thesection{} (\alph{subsection})}
+
+\newcommand{\plot}[3]{\begin{figure}[ht]\centering\includegraphics[width=12cm]{#1}\caption{#2}\label{#3}\end{figure}}
 
 \begin{document}
 \maketitle
@@ -99,12 +102,9 @@
   \subsection{}
   The data and interpolations are plotted in figure \ref{fig:interpolate}.
 
-  \begin{figure}[h]
-    \centering
-    \includegraphics[width=12cm]{assignment-q-3}
-    \caption{Linear and natural cubic spline interpolation on the given data.}
-    \label{fig:interpolate}
-  \end{figure}
+  \plot{assignment-q-3}{
+    Linear and natural cubic spline interpolation on the given data.
+  }{fig:interpolate}
 
 % Question 4
 \section{}
@@ -117,12 +117,57 @@
   is ultimately based on \texttt{PCG XSL RR 128/64}, which is a random number generator with
   very robust statistical properties and small memory requirements\cite{pcg}.
 
-  \begin{figure}[h]
-    \centering
-    \includegraphics[width=12cm]{assignment-q-5-1}
-    \caption{Random samples drawn from a uniform distribution over $[0,1]$.}
-    \label{fig:uniform}
-  \end{figure}
+  \plot{assignment-q-5-a}{
+    Random samples drawn from a uniform distribution over $[0,1]$. The red line indicates the shape of
+    the sample distribution.
+  }{fig:uniform}
+
+  \subsection{}
+  \label{sec:sample}
+  Starting from a uniform variate $x \in [0,1]$ with $x \sim p(x) = 1$, consider:
+
+  \begin{equation}
+  \int_0^x d\zeta p_x(\zeta) = \int_0^{y(x)} d\gamma p_y(\gamma) = C_y(y(x)),
+  \end{equation}
+  from where it follows that
+  \begin{equation}
+  y(x) = C_y^{-1}(x) = \left(\int_0^y d\gamma p_y(\gamma)\right)^{-1}(x).
+  \end{equation}
+
+  We are given $p_y(y) = \frac{1}{2} \cos(\frac{y}{2})$, so then:
+  \begin{equation}
+  C_y(y) = \int_0^y d\gamma \frac{1}{2} \cos(\frac{\gamma}{2}) = \sin(\frac{y}{2}),
+  \end{equation}
+  from where we finally find:
+  \begin{equation}
+  y(x) = C_y^{-1}(x) = 2 \times \arcsin(x).
+  \end{equation}
+
+  The resulting sample distribution can be seen in figure \ref{fig:sample}.
+
+  \plot{assignment-q-5-b}{
+    Samples of $x \sim \frac{1}{2} \cos(\frac{x}{2})$. The red line indicates the shape of
+    the sample distribution.
+  }{fig:sample}
+
+  \subsection{}
+  We implement a simple rejection method in \texttt{/assignment/comply}. The implementations
+  interface is modeled on the rejection sampling interface provided by Gonum.
+
+  We use the distribution from \ref{sec:sample} as the proposal distribution, with a value
+  of $c = 1.3$. (This $c$ is chosen to minimize the rejection probability.) The resulting
+  sample distribution can be seen in figure \ref{fig:reject}.
+
+  \plot{assignment-q-5-c}{
+    Samples of $x \sim \frac{2}{\pi} \cos^2(\frac{x}{2})$. The red line indicates the shape of
+    the sample distribution.
+  }{fig:reject}
+
+  The ration of the time taken versus \ref{sec:sample} is approximately $1.29$. We know that the
+  expected number of samples taken is $<N> = n \times c$, where $n$ is the number of samples we
+  wish to generate. Note that the relative time taken varies with every run, and depends on additional
+  factors that lie outside the program itself. Running the binary multiple times shows that the
+  average ration is $\approx 1.3$ as expected.
 
 \bibliography{assignment.bib}{}
 \bibliographystyle{plain}

@@ -19,9 +19,10 @@ operating system and architecture.
 
 ## Contained folders
 
-- `problems` ----- answers to problem sheets
-- `assignment` --- answers to assignment problems
-- `pkg` ---------- reusable packages
+- `/assignment` --- answers to assignment problems
+- `/pdf` ---------- LaTeX code for submission PDFs
+- `/pkg` ---------- reusable packages
+- `/problems` ----- answers to problem sheets
 
 
 ## License
