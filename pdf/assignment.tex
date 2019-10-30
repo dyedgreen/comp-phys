@@ -2,6 +2,7 @@
 
 \usepackage[utf8]{inputenc}
 \usepackage{amsmath}
+\usepackage{amssymb}
 \usepackage{graphicx}
 \usepackage{hyperref}
 \usepackage{cite}
@@ -16,7 +17,7 @@
 \renewcommand\thesection{Question \arabic{section}}
 \renewcommand\thesubsection{\thesection{} (\alph{subsection})}
 
-\newcommand{\plot}[3]{\begin{figure}[ht]\centering\includegraphics[width=12cm]{#1}\caption{#2}\label{#3}\end{figure}}
+\newcommand{\plot}[3]{\begin{figure}[ht]\centering\includegraphics[width=10cm]{#1}\caption{#2}\label{#3}\end{figure}}
 
 \begin{document}
 \maketitle
@@ -25,6 +26,7 @@
 \section{}
 
   \subsection{}
+  \label{sec:cgo}
   The program can be found in \texttt{/assignment/q-1}. It reports the smallest floating point number
   $a$ such that $1 + a > 1$ as\footnotemark{}:
   \begin{equation}
@@ -42,8 +44,12 @@
   \end{itemize}
 
   Note that Go does not support extended precision floating point values (although they can be used through
-  CGo, as is done for question (a)). These values match the expected values (where `expected' means `values
-  they need to be to be IEEE compliant').
+  CGo, as is done for \ref{sec:cgo}). These values match the expected values (where `expected' means `values
+  they need to be to be IEEE compliant'). The theoretical values given our above definition are:
+  \begin{itemize}
+    \item \texttt{float32} $a = 2^{-23}$
+    \item \texttt{float64} $a = 2^{-52}$
+  \end{itemize}
 
   \footnotetext{Machine $\epsilon$ is also sometimes defined as $\frac{a}{2}$, with a defined as above.
   The values given for $a$ are valid for the definition given above.}
@@ -55,12 +61,12 @@
   \texttt{/assignment/comply} package.
 
   \subsection{}
-  Using the LU decomposition routine, one can find found\footnotemark:
+  Using the LU decomposition routine, one can find\footnotemark:
   \begin{equation}
     L = \begin{bmatrix}1 & 0 & 0 & 0 & 0 \\ 1 & 1 & 0 & 0 & 0 \\ 0 & 1.125 & 1 & 0 & 0 \\ 0 & 0 & -1.419\cdots & 1 & 0 \\ 0 & 0 & 0 & -1.216\cdots & 1\end{bmatrix}
   \end{equation}
   \begin{equation}
-    U = \begin{bmatrix}3 & 1 & 0 & 0 & 0 \\ 0 & 8 & 4 & 0 & 0 \\ 0 & 0 & 15.5 & 10 & 0 \\ 0 & 0 & 0 & 45.193\cdots & -25 \\ 0 & 0 & 0 & 0 & 30.575\cdots\end{bmatrix}.
+    U = \begin{bmatrix}3 & 1 & 0 & 0 & 0 \\ 0 & 8 & 4 & 0 & 0 \\ 0 & 0 & 15.5 & 10 & 0 \\ 0 & 0 & 0 & 45.193\cdots & -25 \\ 0 & 0 & 0 & 0 & 30.575\cdots\end{bmatrix},
   \end{equation}
   where $LU = A$, with $A$ being the matrix given in the assignment problem.
 
@@ -109,6 +115,36 @@
 % Question 4
 \section{}
   \subsection{}
+  The program can be found in \texttt{/assignment/q-4}. The convolutions are implemented in \texttt{/pkg/signal}.
+
+  The program samples both functions over the range $[-10; 10]$ and takes $2^{10} = 1024$ samples. This
+  is an exact power of two, which makes good use of the fast Fourier transform.
+
+  A sample density of $1000$ was chosen for two reasons: firstly, this returns a convolution
+  sampled at a rate which results in a smooth-looking graph. Secondly, trials using the Fourier
+  transform show that for the chosen range and sample-density, we retrieve the original series very
+  precisely with minimal edge-effects or aliasing. This should then lead to good results when
+  using the Fourier transform to compute the convolution.
+
+  Our choices are validated, when comparing the numerical result to the exact result, which can
+  be obtained by computing the convolution integral directly. (See figure \ref{fig:conv} and equation
+  \ref{eq:conv}.)
+
+  \subsection{}
+  The plot showing $h(t)$, $g(t)$, and $(g * h)(t)$ can be seen in figure \ref{fig:conv}.
+
+  % Given by: integrate(4 * exp((-(t-tau)**2)/2) / sqrt(2*pi), (tau, 3, 5))
+  The theoretical result
+  \begin{equation}
+    \label{eq:conv}
+    (g * h)(t) = - 2 \operatorname{erf}{\left(\frac{\sqrt{2} \left(3 - t\right)}{2} \right)} + 2 \operatorname{erf}{\left(\frac{\sqrt{2} \left(5 - t\right)}{2} \right)}
+  \end{equation}
+  is also shown in the plot.
+
+  \plot{assignment-q-4}{
+    Convolution of the function g and h. The plot depicts the functions themselves, their exact
+    convolution, and the result of their numerical convolution.
+  }{fig:conv}
 
 % Question 5
 \section{}
@@ -127,20 +163,20 @@
   Starting from a uniform variate $x \in [0,1]$ with $x \sim p(x) = 1$, consider:
 
   \begin{equation}
-  \int_0^x d\zeta p_x(\zeta) = \int_0^{y(x)} d\gamma p_y(\gamma) = C_y(y(x)),
+    \int_0^x d\zeta p_x(\zeta) = \int_0^{y(x)} d\gamma p_y(\gamma) = C_y(y(x)),
   \end{equation}
   from where it follows that
   \begin{equation}
-  y(x) = C_y^{-1}(x) = \left(\int_0^y d\gamma p_y(\gamma)\right)^{-1}(x).
+    y(x) = C_y^{-1}(x) = \left(\int_0^y d\gamma p_y(\gamma)\right)^{-1}(x).
   \end{equation}
 
   We are given $p_y(y) = \frac{1}{2} \cos(\frac{y}{2})$, so then:
   \begin{equation}
-  C_y(y) = \int_0^y d\gamma \frac{1}{2} \cos(\frac{\gamma}{2}) = \sin(\frac{y}{2}),
+    C_y(y) = \int_0^y d\gamma \frac{1}{2} \cos(\frac{\gamma}{2}) = \sin(\frac{y}{2}),
   \end{equation}
   from where we finally find:
   \begin{equation}
-  y(x) = C_y^{-1}(x) = 2 \times \arcsin(x).
+    y(x) = C_y^{-1}(x) = 2 \times \arcsin(x).
   \end{equation}
 
   The resulting sample distribution can be seen in figure \ref{fig:sample}.
@@ -164,7 +200,7 @@
   }{fig:reject}
 
   The ration of the time taken versus \ref{sec:sample} is approximately $1.29$. We know that the
-  expected number of samples taken is $<N> = n \times c$, where $n$ is the number of samples we
+  expected number of samples taken is $\mathbb{E}(N) = n \times c$, where $n$ is the number of samples we
   wish to generate. Note that the relative time taken varies with every run, and depends on additional
   factors that lie outside the program itself. Running the binary multiple times shows that the
   average ration is $\approx 1.3$ as expected.

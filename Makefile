@@ -36,6 +36,9 @@ assignment:
 	echo "\nAssignment Question 3:\n"
 	cd ./assignment/q-3/ && ./main
 	cp ./assignment/q-3/plot.pdf ./pdf/images/assignment-q-3.pdf
+	echo "\nAssignment Question 4:\n"
+	cd ./assignment/q-4/ && ./main
+	cp ./assignment/q-4/plot.pdf ./pdf/images/assignment-q-4.pdf
 	echo "\nAssignment Question 5:\n"
 	cd ./assignment/q-5/ && ./main
 	cp ./assignment/q-5/plot-a.pdf ./pdf/images/assignment-q-5-a.pdf

@@ -9,12 +9,12 @@ import (
 )
 
 func main() {
-	// Determine smallest possible float on this machine
+	// Determine smallest possible epsilon on this machine
 	// We use c's long double to test if the CPU supports extended precision floating point numbers
 	size := int64(C.float_acc())
-	fmt.Println("This computers 'long double' has the following smallest number n > 0:")
+	fmt.Println("This computers 'long double' has the following epsilon precision:")
 	fmt.Printf("2^(-%v)\n", size)
-	fmt.Println("The go compiler (and spec) tells us that our 32 and 64 floats have the following precision:")
+	fmt.Println("Go's 32 and 64 bit floating points have the following precision:")
 	// The Nextafter functions work the same way C.float_acc is implemented.
 	// See https://golang.org/src/math/nextafter.go?s=917:957#L25
 	fmt.Printf("float32 %e\n", math.Nextafter32(1, 2)-1)

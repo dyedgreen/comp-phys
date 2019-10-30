@@ -24,7 +24,7 @@ func main() {
 	//       and we have demonstrated in unit tests for the problem compliant spline that
 	//       outputs are identical.
 	//       If still unhappy with this choice, feel free to use the compliant implementation
-	//       by changing this file and recompiling the report after running `make assignment`.
+	//       by changing this file and recompiling the report after running `make pdf`.
 	splRange, err := interpolate.NewSplineRange(x, y)
 	if err != nil {
 		panic(err)
