@@ -23,7 +23,7 @@ If you are using homebrew on macOs, the installation should be as simple as:
 brew install golang
 ```
 
-## Installation example Ubuntu
+### Installation example Ubuntu
 
 If you are using Ubuntu, you might want to install Go using snap:
 ```bash
