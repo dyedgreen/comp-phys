@@ -12,7 +12,7 @@ fmt:
 # Run unit tests
 test: fmt
 test:
-	go test -coverprofile=testcov.log ./...
+	go test -coverprofile=testcov.log ./pkg/... ./assignment/comply/...
 
 # Display test coverage in a browser
 cover: test

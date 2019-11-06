@@ -10,6 +10,10 @@ import (
 // like a continuous convolution would be. To
 // approximate an integral, you need to multiply
 // element-wise by your step-size (ie by approx dx).
+//
+// The input for the response function should be given
+// as centered on zero, i.e. b[len(b)/2] = b(0).
+// The runtime complexity of this function is O(N^2).
 func Convolve(a, b []float64) []float64 {
 	c := make([]float64, len(a), len(a))
 	off := len(b) / 2
@@ -30,8 +34,12 @@ func Convolve(a, b []float64) []float64 {
 // this function computes (a * b) = F^-1(F(a) * F(b)),
 // where the multiplication is understood to be
 // element-wise.
+//
+// The runtime complexity of this function is O(N*ln(N))
 func FFTConvolve(a, b []float64) []float64 {
-	// Translate b to be stored in wrap-around order
+	// Translate b to be stored in wrap-around order.
+	// This is equivalent to assuming that b[len(b)/2] = b(0),
+	// as we expect for Convolve.
 	bWrap := make([]float64, len(a), len(a))
 	off := len(b) / 2
 	for i := 0; i < off; i++ {
@@ -42,7 +50,7 @@ func FFTConvolve(a, b []float64) []float64 {
 	fft := fourier.NewFFT(len(a))
 	c := fft.Coefficients(nil, a)
 	d := fft.Coefficients(nil, bWrap)
-	// Compute convolution
+	// Compute convolution (reusing c for the result)
 	for i := range c {
 		c[i] = c[i] * d[i]
 	}

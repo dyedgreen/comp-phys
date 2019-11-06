@@ -35,7 +35,7 @@ func NewSplineRange(xs, ys []float64, boundary ...float64) (*SplineRange, error)
 	// Set the right bound
 	var un, yn float64
 	if len(boundary) > 1 {
-		yn = -0.5
+		yn = 0.5
 		un = (3 / (xs[len(yy)-1] - xs[len(yy)-2])) * (boundary[1] - (ys[len(yy)-1]-ys[len(yy)-2])/(xs[len(yy)-1]-xs[len(yy)-2]))
 	} else {
 		// Use natural right bound
@@ -52,12 +52,12 @@ func NewSplineRange(xs, ys []float64, boundary ...float64) (*SplineRange, error)
 
 // NewSplineRangeCopy is like NewSplineRange, except the passed
 // data is copied.
-func NewSplineRangeCopy(xs, ys []float64, yy0, yy1 float64) (*SplineRange, error) {
+func NewSplineRangeCopy(xs, ys []float64, yy ...float64) (*SplineRange, error) {
 	xsCopy := make([]float64, len(xs), len(xs))
 	ysCopy := make([]float64, len(ys), len(ys))
 	copy(xsCopy, xs)
 	copy(ysCopy, ys)
-	return NewSplineRange(xsCopy, ysCopy, yy0, yy1)
+	return NewSplineRange(xsCopy, ysCopy, yy...)
 }
 
 // Bounds implements a Range.

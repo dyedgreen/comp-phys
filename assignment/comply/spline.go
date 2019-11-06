@@ -24,8 +24,7 @@ func NewSplineRange(xs, ys []float64) (*SplineRange, error) {
 		return nil, interpolate.ErrorDimMissmatch
 	}
 	yy := make([]float64, len(ys), len(ys))
-	// The compliant version only supports natural
-	// boundary conditions
+	// Set factors for yy in tridiagonal band
 	t := make([]float64, len(yy), len(yy))
 	m := mat.NewDense(len(yy), len(yy), nil)
 	for i := 1; i < len(t)-1; i++ {
@@ -34,13 +33,16 @@ func NewSplineRange(xs, ys []float64) (*SplineRange, error) {
 		m.Set(i, i, (xs[i+1]-xs[i-1])/3)
 		m.Set(i, i+1, (xs[i+1]-xs[i])/6)
 	}
-	// Natural BCs
+	// The compliant version only supports natural
+	// boundary conditions
 	m.Set(0, 0, 1)
 	m.Set(len(yy)-1, len(yy)-1, 1)
 	decomp, err := NewLU(m)
 	if err != nil {
 		return nil, err
 	}
+	// Use the home-cooked matrix solver
+	// to get the yy's
 	tVec := mat.NewVecDense(len(t), t)
 	yyVec := decomp.Solve(tVec)
 	for i := range yy {

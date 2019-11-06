@@ -27,17 +27,19 @@
 
   \subsection{}
   \label{sec:cgo}
-  The program can be found in \texttt{/assignment/q-1}. It reports the smallest floating point number
+  The program can be found in \texttt{/assignment/q-1}.
+
+  \subsection{}
+  The program written for \ref{sec:cgo} reports the smallest floating point number
   $a$ such that $1 + a > 1$ as\footnotemark{}:
   \begin{equation}
     a = 2^{-63}.
   \end{equation}
 
-  Note that this is for the C numeric type \texttt{long double}, on a 2017 MacBook Pro. This size
-  is the one that would be expected for an 80-bit extended precision floating point (IEEE 754).
+  Note that this is for the C numeric type \texttt{long double}, on a 2017 MacBook Pro using clang.
+  This size is the one that would be expected for an 80-bit extended precision floating point (IEEE 754).
 
-  \subsection{}
-  Go supports IEEE 32 and 64 bit floating point numbers. For these types we find:
+  Go supports 32 and 64 bit IEEE floating point numbers. For these types we find:
   \begin{itemize}
     \item \texttt{float32} $a \approx 1.192093 \times 10^{-7}$
     \item \texttt{float64} $a \approx 2.220446 \times 10^{-16}$
@@ -122,11 +124,11 @@
 
   A sample density of $1000$ was chosen for two reasons: firstly, this returns a convolution
   sampled at a rate which results in a smooth-looking graph. Secondly, trials using the Fourier
-  transform show that for the chosen range and sample-density, we retrieve the original series very
+  transform show that for the chosen range and sample-density, one retrieves the original series very
   precisely with minimal edge-effects or aliasing. This should then lead to good results when
   using the Fourier transform to compute the convolution.
 
-  Our choices are validated, when comparing the numerical result to the exact result, which can
+  These choices are validated, when comparing the numerical result to the exact result, which can
   be obtained by computing the convolution integral directly. (See figure \ref{fig:conv} and equation
   \ref{eq:conv}.)
 
@@ -149,9 +151,10 @@
 % Question 5
 \section{}
   \subsection{}
-  The resulting distribution can be seen in figure \ref{fig:uniform}. The used random sampling
-  is ultimately based on \texttt{PCG XSL RR 128/64}, which is a random number generator with
-  very robust statistical properties and small memory requirements\cite{pcg}.
+  The program is implemented in \texttt{/assignment/q-5}, and the resulting distribution can be seen in
+  figure \ref{fig:uniform}. The used random sampling is ultimately based on \texttt{PCG XSL RR 128/64},
+  which is a random number generator with very robust statistical properties and small memory
+  requirements\cite{pcg}.
 
   \plot{assignment-q-5-a}{
     Random samples drawn from a uniform distribution over $[0,1]$. The red line indicates the shape of
@@ -170,11 +173,11 @@
     y(x) = C_y^{-1}(x) = \left(\int_0^y d\gamma p_y(\gamma)\right)^{-1}(x).
   \end{equation}
 
-  We are given $p_y(y) = \frac{1}{2} \cos(\frac{y}{2})$, so then:
+  Given $p_y(y) = \frac{1}{2} \cos(\frac{y}{2})$, then:
   \begin{equation}
     C_y(y) = \int_0^y d\gamma \frac{1}{2} \cos(\frac{\gamma}{2}) = \sin(\frac{y}{2}),
   \end{equation}
-  from where we finally find:
+  from which finally:
   \begin{equation}
     y(x) = C_y^{-1}(x) = 2 \times \arcsin(x).
   \end{equation}
@@ -187,25 +190,65 @@
   }{fig:sample}
 
   \subsection{}
-  We implement a simple rejection method in \texttt{/assignment/comply}. The implementations
+  The rejection method is implemented in \texttt{/assignment/comply}. The implementations
   interface is modeled on the rejection sampling interface provided by Gonum.
 
   We use the distribution from \ref{sec:sample} as the proposal distribution, with a value
-  of $c = 1.3$. (This $c$ is chosen to minimize the rejection probability.) The resulting
+  of $c = 1.3$. (This $c$ is chosen to minimize the rejection probability\footnotemark{}.) The resulting
   sample distribution can be seen in figure \ref{fig:reject}.
+
+  \footnotetext{Notice that $\frac{4}{\pi} \approx 1.3$.}
 
   \plot{assignment-q-5-c}{
     Samples of $x \sim \frac{2}{\pi} \cos^2(\frac{x}{2})$. The red line indicates the shape of
     the sample distribution.
   }{fig:reject}
 
-  The ration of the time taken versus \ref{sec:sample} is approximately $1.29$. We know that the
-  expected number of samples taken is $\mathbb{E}(N) = n \times c$, where $n$ is the number of samples we
-  wish to generate. Note that the relative time taken varies with every run, and depends on additional
-  factors that lie outside the program itself. Running the binary multiple times shows that the
-  average ration is $\approx 1.3$ as expected.
+  The ration of the time taken versus \ref{sec:sample} falls around $1.3$. Knowing that the
+  expected number of samples taken is $\mathbb{E}(N) = n \times c$, where $n$ is the number of samples
+  to generate, the expected ratio is $1.3$. Note that the relative time taken varies with every run,
+  and depends on additional factors that lie outside the program itself. Running the binary multiple
+  times shows that the average ration is $\approx 1.3$ as expected.
 
 \bibliography{assignment.bib}{}
 \bibliographystyle{plain}
+
+\appendix{}
+
+\section{Unit Tests}
+The code written for the assignments, is extensively unit-tested. To run the unit tests, use
+\texttt{make test} and to inspect test-coverage on a line-by-line basis, run \texttt{make cover}.
+
+Below, the tests written for the different routines are outlined. These tests aim validate the
+implementations submitted as part of this assignment. (Tests can be found in files named
+\texttt{*\_text.go}.)
+
+  \subsection{LU Decomposition}
+  The tests approaches are the following:
+  \begin{itemize}
+    \item $LU = M$, so one can check if $L$ and $U$ are correct by performing a matrix multiplication
+    and comparing with $M$.
+    \item $M\vec{x} = \vec{y}$, so one can similarly check if $\vec{x}$ is correct, by performing
+    a dot product and comparing the resulting vector with $\vec{y}$.
+    \item $M^{-1}M = \mathbb{I}$, so one can verify any obtained inverse by performing a matrix
+    multiplication and comparing the result to unity.
+  \end{itemize}
+
+  \subsection{Interpolation}
+  The cubic splines and linear interpolation should be the exact result if the function being interpolated
+  is linear or cubic respectively. This allows one to compare values directly and verify.
+
+  \subsection{Convolution}
+  If one attempts a convolution for which the analytic result is known, one can directly compare the
+  obtained values and verify the convolution is computed correctly.
+
+  \subsection{Sampling}
+  There are no unit-tests for the sampling routines. However, above the resulting distributions
+  are plotted and compared to the theoretical distributions sampled from (see e.g. figure \ref{fig:reject}).
+
+  This demonstrates, that with regards to the resulting distribution, the samples work as advertised.
+  There are many more statistics which one could compare to known values. And depending on the sampling
+  routine and quality of our random numbers some may show a discrepancy. However for the purposes of
+  this assignment, generating the correct distribution is sufficient.
 
 \end{document}

@@ -31,6 +31,9 @@ func NewLU(m mat.Matrix) (*LU, error) {
 	N, _ := m.Dims()
 	decomp := mat.NewDense(N, N, nil)
 	lu := &LU{decomp}
+	// Since luDecompMatrix acts as a view to the
+	// underlying data, we can use them to conveniently
+	// access the data in our matrices
 	L, U := lu.L(), lu.U()
 
 	// Perform a simple application of
@@ -80,7 +83,9 @@ func (lu *LU) Solve(y mat.Vector) mat.Vector {
 		x[i] = (y.AtVec(i) - sum) / L.At(i, i)
 	}
 
-	// Solve for x using back-substitution on U
+	// Solve for x using back-substitution on U.
+	// Note that we can reuse x, since we only ever
+	// overwrite values we no longer need.
 	for i := n - 1; i >= 0; i-- {
 		var sum float64
 		for j := n - 1; j > i; j-- {
@@ -98,6 +103,10 @@ func (lu *LU) Invert() mat.Matrix {
 	inv := mat.NewDense(n, n, nil)
 	e := mat.NewVecDense(n, nil)
 
+	// Solve for the inverse, by solving
+	// Ac_i = e_i, where c_i is the ith
+	// column of the inverse and e_i is
+	// the ith basis vector.
 	for i := 0; i < n; i++ {
 		if i > 0 {
 			e.SetVec(i-1, 0)
