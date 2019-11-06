@@ -9,6 +9,9 @@ the submitted ZIP archive run `make zip`.
 (Note that the `zip` make target will create a zip with all files in the current directory, to generate
 a tidy and small file, use `make clean zip`)
 
+## Running Tests
+
+To run tests, use `make test`. (To see a code coverage breakdown, use `make cover`.)
 
 ## Build prerequisites
 
