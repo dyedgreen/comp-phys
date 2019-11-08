@@ -219,7 +219,7 @@
 The code written for the assignments, is extensively unit-tested. To run the unit tests, use
 \texttt{make test} and to inspect test-coverage on a line-by-line basis, run \texttt{make cover}.
 
-Below, the tests written for the different routines are outlined. These tests aim validate the
+Below, the tests written for the different routines are outlined. These tests aim to validate the
 implementations submitted as part of this assignment. (Tests can be found in files named
 \texttt{*\_text.go}.)
 
@@ -249,6 +249,15 @@ implementations submitted as part of this assignment. (Tests can be found in fil
   This demonstrates, that with regards to the resulting distribution, the samples work as advertised.
   There are many more statistics which one could compare to known values. And depending on the sampling
   routine and quality of our random numbers some may show a discrepancy. However for the purposes of
-  this assignment, generating the correct distribution is sufficient.
+  this assignment, generating the correct distribution is sufficient\footnotemark{}.
+
+  \footnotetext{Since a random number generator with good statistical properties is used, one might expect
+  that our sampler will have reasonable statistical properties. Seeing that the assignment required to
+  use a good random number generator and justify the choice, one might argue that more statistics are
+  expected to be correct. However the only statistic relevant to the desired output (histogram) is the
+  distribution, which is correct. So I felt that no further tests were necessary.}
+
+\section{Word Count}
+\texttt{wc} reports 1526 words for the \LaTeX{} source file.
 
 \end{document}

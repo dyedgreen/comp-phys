@@ -40,22 +40,22 @@ func FFTConvolve(a, b []float64) []float64 {
 	// Translate b to be stored in wrap-around order.
 	// This is equivalent to assuming that b[len(b)/2] = b(0),
 	// as we expect for Convolve.
-	bWrap := make([]float64, len(a), len(a))
+	res := make([]float64, len(a), len(a)) // we can reuse this for the output
 	off := len(b) / 2
 	for i := 0; i < off; i++ {
-		bWrap[i] = b[off+i]
-		bWrap[off+i] = b[off-i]
+		res[i] = b[off+i]
+		res[off+i] = b[off-i]
 	}
 	// Compute Fourier transforms
 	fft := fourier.NewFFT(len(a))
 	c := fft.Coefficients(nil, a)
-	d := fft.Coefficients(nil, bWrap)
+	d := fft.Coefficients(nil, res)
 	// Compute convolution (reusing c for the result)
 	for i := range c {
 		c[i] = c[i] * d[i]
 	}
 	// Obtain convolution from inverse transform
-	res := fft.Sequence(nil, c)
+	fft.Sequence(res, c)
 	// Normalize transform result
 	for i := range res {
 		res[i] /= float64(len(a))

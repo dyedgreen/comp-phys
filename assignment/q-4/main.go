@@ -37,6 +37,8 @@ func main() {
 	// Compute convolution
 	fmt.Println("Computing convolution using Fourier transforms ...")
 
+	// See assignment PDF for reason these constants
+	// are chosen (/pdf/assignment.tex)
 	const res = 1 << 10
 	const min float64 = -10
 	const max float64 = +10
