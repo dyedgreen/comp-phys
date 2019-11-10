@@ -17,10 +17,12 @@ import (
 func Convolve(a, b []float64) []float64 {
 	c := make([]float64, len(a), len(a))
 	off := len(b) / 2
+	// Compute convolution
 	for i := range c {
 		for j := range b {
 			idx := j - i + off
 			if idx < 0 || idx >= len(a) {
+				// This is equivalent to zero-padding a
 				continue
 			}
 			c[i] += a[idx] * b[j]
@@ -33,10 +35,14 @@ func Convolve(a, b []float64) []float64 {
 // implemented using Fourier transforms. I.e.
 // this function computes (a * b) = F^-1(F(a) * F(b)),
 // where the multiplication is understood to be
-// element-wise.
+// element-wise. Note that this function expects
+// len(a) == len(b).
 //
 // The runtime complexity of this function is O(N*ln(N))
 func FFTConvolve(a, b []float64) []float64 {
+	if len(a) != len(b) {
+		panic("a and b must be of equal length")
+	}
 	// Translate b to be stored in wrap-around order.
 	// This is equivalent to assuming that b[len(b)/2] = b(0),
 	// as we expect for Convolve.
