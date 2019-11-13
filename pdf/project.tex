@@ -1,0 +1,33 @@
+\documentclass[10pt, a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{cite}
+\usepackage{fullpage}
+
+\graphicspath{ {./images/} }
+
+\title{Computational Physics Project}
+\author{Tilman Roeder}
+\date{\today}
+
+\newcommand{\plot}[3]{\begin{figure}[ht]\centering\includegraphics[width=10cm]{#1}\caption{#2}\label{#3}\end{figure}}
+
+\begin{document}
+\maketitle
+
+\section{A section}
+Bla blub.
+
+\bibliography{assignment.bib}{}
+\bibliographystyle{plain}
+
+\appendix{}
+
+\section{Appendix here}
+Bla blub.
+
+\end{document}

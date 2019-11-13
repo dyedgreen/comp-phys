@@ -3,7 +3,7 @@
 ASSIGNMENTS = $(shell find ./assignment -name "q-*" -type d)
 
 # Default target for happy markers
-all: assignment
+all: project-run
 
 # Format go sources
 fmt:
@@ -18,6 +18,13 @@ test:
 cover: test
 cover:
 	go tool cover -html=testcov.log
+
+project:
+	go build -o ./project/main ./project
+
+project-run: project
+project-run:
+	./project/main
 
 # Build assignment binaries
 $(ASSIGNMENTS):
@@ -49,17 +56,21 @@ assignment:
 clean:
 	rm $(shell find ./problems -not -name "*.go" -type f) || :
 	rm $(shell find ./assignment -not -name "*.go" -and -not -name "*.c" -and -not -name "*.h" -type f) || :
-	rm $(shell find ./pdf -not -name "*.tex" -and -no -name "*.bib" -type f) || :
+	rm $(shell find ./project -not -name "*.go" -and -not -name "*.c" -and -not -name "*.h" -type f) || :
+	rm $(shell find ./pdf -not -name "*.tex" -and -not -name "*.bib" -type f) || :
 	rm comp-phys.zip testcov.log || :
 
 # Build assignment report
 pdf: assignment
+pdf: project
 pdf:
 	cd ./pdf && pdflatex ./assignment.tex && bibtex ./assignment.aux && pdflatex ./assignment.tex
+	cd ./pdf && pdflatex ./project.tex && bibtex ./project.aux && pdflatex ./project.tex
 
 # Build zip for submission
+zip: clean
 zip:
 	rm comp-phys.zip || :
 	zip --symlinks -r comp-phys.zip .
 
-.PHONY: all fmt test clean pdf zip $(ASSIGNMENTS)
+.PHONY: all fmt test clean pdf zip $(ASSIGNMENTS) project cover

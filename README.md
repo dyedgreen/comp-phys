@@ -2,12 +2,11 @@
 
 ## Build instructions
 
-To build and run all assignment code with default data a simple `make` should suffice. (Alternatively
-one can run `make assignment`). To generate the submitted reports run `make pdf` and to generate
-the submitted ZIP archive run `make zip`.
+To build and run the project, use `make` or `make project-run`. To only build the project binary,
+use `make project`.
 
-(Note that the `zip` make target will create a zip with all files in the current directory, to generate
-a tidy and small file, use `make clean zip`)
+To build and run all assignment code with default data a simple `make assignment` should suffice. To
+generate the submitted reports run `make pdf` and to generate the submitted ZIP archive run `make zip`.
 
 ## Running Tests
 
