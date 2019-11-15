@@ -15,12 +15,15 @@ func TestTrap(t *testing.T) {
 		func(x float64) float64 { return x * x * x / 3 },
 		math.Exp,
 		math.Exp,
+		func(x float64) float64 { return 4*x*x - 2*x + 4 },
+		func(x float64) float64 { return 4*x*x*x/3 - x*x + 4*x },
 	}
 
 	borders := []float64{
 		// Contains a, b pairs sequentially
 		0, 10,
 		-10, 4,
+		-4, 3.5,
 	}
 
 	for i := 0; i < len(cases); i += 2 {

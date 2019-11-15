@@ -82,7 +82,7 @@ func (trap *trapezoidalIntegral) Integrate(a, b float64) (float64, error) {
 
 	for i := 0; i < trap.workers; i++ {
 		go func() {
-			for x, ok := <-work; ok; x, ok = <-work {
+			for x := range work {
 				results <- trap.function(x)
 			}
 		}()
@@ -94,10 +94,10 @@ func (trap *trapezoidalIntegral) Integrate(a, b float64) (float64, error) {
 	work <- a
 	work <- b
 	integral := 0.5 * h * (<-results + <-results)
-	prevInt := integral + trap.accuracy*2 // such that the first call fails
+	prevInt := integral
 	steps := 2
 
-	for n := 1; math.Abs(integral-prevInt) > trap.accuracy && (steps+n < trap.steps || trap.steps < 0); n *= 2 {
+	for n := 1; steps+n < trap.steps || trap.steps < 0; n *= 2 {
 		steps += n
 		prevInt = integral
 		// Half step distance used
@@ -120,6 +120,11 @@ func (trap *trapezoidalIntegral) Integrate(a, b float64) (float64, error) {
 				integral += h * <-results
 				r++
 			}
+		}
+
+		// Check for convergence, after the first 5 steps
+		if n > 1<<5 && math.Abs(integral-prevInt) < trap.accuracy {
+			break
 		}
 	}
 
