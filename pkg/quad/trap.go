@@ -79,6 +79,11 @@ func (trap *trapezoidalIntegral) Integrate(a, b float64) (float64, error) {
 	trap.lock.RLock()
 	defer trap.lock.RUnlock()
 
+	if trap.steps < 2 && trap.steps >= 0 {
+		trap.stats = &Stats{0, 0, ErrorMinSteps}
+		return 0, ErrorMinSteps
+	}
+
 	out := make(chan float64)
 	next := make(chan bool)
 	defer close(next)
@@ -90,7 +95,8 @@ func (trap *trapezoidalIntegral) Integrate(a, b float64) (float64, error) {
 	integral := <-out
 	var prevInt float64
 
-	for n := 1; steps+n < trap.steps || trap.steps < 0; n *= 2 {
+	var n int
+	for n = 1; steps+n < trap.steps || trap.steps < 0; n *= 2 {
 		steps += n
 
 		prevInt = integral
@@ -105,7 +111,12 @@ func (trap *trapezoidalIntegral) Integrate(a, b float64) (float64, error) {
 
 	// Record statistics
 	trap.stats = &Stats{steps, math.Abs(integral - prevInt), nil}
-	if trap.stats.Accuracy > trap.accuracy {
+
+	if n <= 1<<5 {
+		// We are not confident in the result, unless we take 5 refining steps
+		// This number is based on experience and comes from Numerical Recipes
+		trap.stats.Error = ErrorInsufficientSteps
+	} else if trap.stats.Accuracy > trap.accuracy {
 		trap.stats.Error = ErrorConverge
 	}
 

@@ -18,10 +18,6 @@ type Integral interface {
 	// Steps determines how many times the function
 	// will be evaluated at most, before the integration
 	// is aborted. Passing in < 0 means no limit.
-	// Note that most underlying schemes will have
-	// a lower limit for steps that they will
-	// perform no matter what. E.g. the trapezoidal
-	// rule will always evaluate at least two steps.
 	Steps(*int) int
 
 	// Function sets the function to be integrated.

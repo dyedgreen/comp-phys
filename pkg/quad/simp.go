@@ -48,6 +48,11 @@ func (simp *simpsonIntegral) Integrate(a, b float64) (float64, error) {
 	simp.lock.RLock()
 	defer simp.lock.RUnlock()
 
+	if simp.steps < 3 && simp.steps >= 0 {
+		simp.stats = &Stats{0, 0, ErrorMinSteps}
+		return 0, ErrorMinSteps
+	}
+
 	out := make(chan float64)
 	next := make(chan bool)
 	defer close(next)
@@ -63,7 +68,8 @@ func (simp *simpsonIntegral) Integrate(a, b float64) (float64, error) {
 	integral := trap*4/3 - prevTrap/3
 	var prevInt float64
 
-	for n := 2; steps+n < simp.steps || simp.steps < 0; n *= 2 {
+	var n int
+	for n = 2; steps+n < simp.steps || simp.steps < 0; n *= 2 {
 		steps += n
 
 		prevInt = integral
@@ -80,7 +86,12 @@ func (simp *simpsonIntegral) Integrate(a, b float64) (float64, error) {
 
 	// Record statistics
 	simp.stats = &Stats{steps, math.Abs(integral - prevInt), nil}
-	if simp.stats.Accuracy > simp.accuracy {
+
+	if n <= 1<<5 {
+		// We are not confident in the result, unless we take 5 refining steps
+		// This number is based on experience and comes from Numerical Recipes
+		simp.stats.Error = ErrorInsufficientSteps
+	} else if simp.stats.Accuracy > simp.accuracy {
 		simp.stats.Error = ErrorConverge
 	}
 
