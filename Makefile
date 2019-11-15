@@ -19,6 +19,8 @@ cover: test
 cover:
 	go tool cover -html=testcov.log
 
+project: fmt
+project: test
 project:
 	go build -o ./project/main ./project
 
