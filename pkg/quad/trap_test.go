@@ -3,6 +3,8 @@ package quad
 import (
 	"fmt"
 	"math"
+	"math/rand"
+	"sync"
 	"testing"
 )
 
@@ -36,6 +38,38 @@ func TestTrap(t *testing.T) {
 			} else if math.Abs(ana-num) > scheme.Accuracy(nil) {
 				t.Error(fmt.Sprintf("result %v is not approximately %v", num, ana), i/2, j/2)
 			}
+		}
+	}
+}
+
+// Ensure step limit and statistic function as
+// advertised.
+func TestTrapLimit(t *testing.T) {
+	// Function that counts how often it is called
+	called := 0
+	mut := sync.Mutex{}
+	rand.Seed(42)
+	fn := func(_ float64) float64 {
+		mut.Lock()
+		called++
+		mut.Unlock()
+		return rand.Float64() * 100
+	}
+
+	scheme := NewTrapezoidalIntegral(16)
+
+	for i := 0; i < 100; i++ {
+		mut.Lock()
+		called = 0
+		mut.Unlock()
+		N := 2 + (rand.Int() % 1000)
+		scheme.Steps(&N)
+		Integrate(fn, 0, 1, scheme)
+		if called > N {
+			t.Error(fmt.Sprintf("was called %v, should have been called %v", called, N))
+		}
+		if called != scheme.Stats().Steps {
+			t.Error(fmt.Sprintf("was called %v, reported to have been called %v", called, scheme.Stats().Steps))
 		}
 	}
 }

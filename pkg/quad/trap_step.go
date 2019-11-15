@@ -4,7 +4,12 @@ package quad
 // successive trapezoidal steps. The results are sent to out,
 // and the workers are terminated if done is closed.
 // Termination happens after every step.
-func trap_stepper(workers int, fn func(float64) float64, a, b float64, out chan<- float64, done <-chan interface{}) {
+//
+// This will compute a least the first step, and at most as
+// many steps as are requested by sending true to next, plus one.
+// (The first result is reported immediately, further can be requested)
+// If next is closed or false is sent, this terminates.
+func trap_stepper(workers int, fn func(float64) float64, a, b float64, out chan<- float64, next <-chan bool) {
 	// Channels used to gather results
 	results := make(chan float64, workers)
 	work := make(chan float64, 2) // TODO: What is good for capacity?
@@ -30,14 +35,9 @@ func trap_stepper(workers int, fn func(float64) float64, a, b float64, out chan<
 	for n := 1; true; n *= 2 {
 		// Report last result
 		out <- integral
-		select {
-		case _, ok := <-done:
-			if !ok {
-				// Done closed, terminate
-				return
-			}
-		default:
-			// Keep working!
+		// Only produce next integral step if wanted
+		if want, ok := <-next; !want || !ok {
+			return
 		}
 
 		// Half step distance used and update integral

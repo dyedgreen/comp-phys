@@ -75,52 +75,23 @@ func (trap *trapezoidalIntegral) Integrate(a, b float64) (float64, error) {
 	trap.lock.RLock()
 	defer trap.lock.RUnlock()
 
-	// Channels used to gather results
-	results := make(chan float64, trap.workers)
-	work := make(chan float64, 2) // TODO: What is good for capacity?
-	defer close(work)
+	out := make(chan float64)
+	next := make(chan bool)
+	defer close(next)
 
-	for i := 0; i < trap.workers; i++ {
-		go func() {
-			for x := range work {
-				results <- trap.function(x)
-			}
-		}()
-	}
+	go trap_stepper(trap.workers, trap.function, a, b, out, next)
 
-	// Gather new points along the function, until the
-	// relative accuracy no longer improves.
-	h := b - a
-	work <- a
-	work <- b
-	integral := 0.5 * h * (<-results + <-results)
-	prevInt := integral
 	steps := 2
+
+	integral := <-out
+	var prevInt float64
 
 	for n := 1; steps+n < trap.steps || trap.steps < 0; n *= 2 {
 		steps += n
+
 		prevInt = integral
-		// Half step distance used
-		h *= 0.5
-		integral *= 0.5 // Adjust `previously used' h to be half
-		// Fill in the missing evaluations
-		stp := (b - a) / float64(n)
-		x, s, r := a+0.5*stp, 0, 0 // x, sent, received
-		for r < n {
-			if s < n {
-				select {
-				case work <- x:
-					s++
-					x += stp
-				case y := <-results:
-					r++
-					integral += h * y // inner ones are factor 1
-				}
-			} else {
-				integral += h * <-results
-				r++
-			}
-		}
+		next <- true // Request next integral
+		integral = <-out
 
 		// Check for convergence, after the first 5 steps
 		if n > 1<<5 && math.Abs(integral-prevInt) < trap.accuracy {
