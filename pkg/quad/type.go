@@ -18,6 +18,10 @@ type Integral interface {
 	// Steps determines how many times the function
 	// will be evaluated at most, before the integration
 	// is aborted. Passing in < 0 means no limit.
+	// Note that most underlying schemes will have
+	// a lower limit for steps that they will
+	// perform no matter what. E.g. the trapezoidal
+	// rule will always evaluate at least two steps.
 	Steps(*int) int
 
 	// Function sets the function to be integrated.
@@ -42,10 +46,13 @@ type Stats struct {
 	Error    error
 }
 
+// Integrate fn between a, b using the supplied scheme. If no scheme is
 func Integrate(fn func(float64) float64, a, b float64, scheme Integral) (float64, error) {
 	if scheme == nil {
 		// Trapezoidal is the default scheme
-		scheme = NewTrapezoidalIntegral(4)
+		// Use 1 worker, so that fn does not have to
+		// be thread safe.
+		scheme = NewTrapezoidalIntegral(1)
 	}
 	if err := scheme.Function(fn); err != nil {
 		return 0, err

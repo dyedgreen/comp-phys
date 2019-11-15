@@ -21,6 +21,8 @@ type trapezoidalIntegral struct {
 // The argument specifies how many workers will be used
 // to evaluate the function. Passing workers < 1 is
 // the same as passing workers = 1.
+// If more than one worker is used, integrand functions
+// must be thread safe.
 func NewTrapezoidalIntegral(workers int) Integral {
 	if workers < 1 {
 		workers = 1
@@ -47,7 +49,9 @@ func (trap *trapezoidalIntegral) Accuracy(acc *float64) float64 {
 	return trap.accuracy
 }
 
-// Steps implements Integral
+// Steps implements Integral. Note that at least two
+// steps will always be evaluated, no matter what is
+// set here.
 func (trap *trapezoidalIntegral) Steps(stp *int) int {
 	if stp != nil {
 		trap.lock.Lock()
