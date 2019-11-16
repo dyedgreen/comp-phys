@@ -105,13 +105,16 @@ func (exp *Expectation) Refine(trials, experiments int) Result {
 	// Add previous results if present
 	// TODO: Should I keep the prev results
 	// un-multiplied for efficiency/ less rounding?
+	// FIXME: https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance
+	//        consider these algorithms for improved numeric stability ...
+
 	if exp.trials > 0 {
 		value1 += float64(exp.trials) * exp.value1
 		value2 += float64(exp.trials) * exp.value2
 	}
 
 	// Compute final results
-	exp.trials += trials
+	exp.trials += trials * experiments
 	exp.experiments += experiments
 	exp.value1 = value1 / float64(exp.trials)
 	exp.value2 = value2 / float64(exp.trials)
@@ -121,8 +124,10 @@ func (exp *Expectation) Refine(trials, experiments int) Result {
 
 func (exp *Expectation) result() Result {
 	return Result{
-		Value:    exp.value1,
-		Variance: exp.value2 - exp.value1,
+		Value: exp.value1,
+		// This may suffer from numerical instability, consider
+		// other algorithms! (check https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance)
+		Variance: exp.value2 - exp.value1*exp.value1,
 		Stats: Stats{
 			Trials:      exp.trials,
 			Experiments: exp.experiments,

@@ -1,6 +1,9 @@
 package casino
 
 import (
+	"errors"
+	"math"
+
 	"golang.org/x/exp/rand"
 )
 
@@ -40,13 +43,13 @@ func NewSampler(dist Distribution, seed uint64) *Sampler {
 	if dist == nil {
 		// If no distribution is specified, this is a fancy
 		// rand.Rand, with less capabilities.
-		dist = UnitDist{}
+		dist = UniDist{}
 	}
 	return &Sampler{dist, rand.New(rand.NewSource(seed))}
 }
 
 func NewUniformSampler(a, b float64, seed uint64) *Sampler {
-	return NewSampler(UnitDistAB{a, b}, seed)
+	return NewSampler(UniDistAB{a, b}, seed)
 }
 
 // Returns a random number from the underlying source,
@@ -56,26 +59,26 @@ func (s *Sampler) Sample() float64 {
 }
 
 // Implements a uniform distribution [0,1)
-type UnitDist struct{}
+type UniDist struct{}
 
-func (_ UnitDist) Transform(x float64) float64 {
+func (_ UniDist) Transform(x float64) float64 {
 	return x
 }
 
-func (_ UnitDist) Prob(x float64) float64 {
+func (_ UniDist) Prob(x float64) float64 {
 	return 1
 }
 
 // Implements a uniform distribution [A, B)
-type UnitDistAB struct {
+type UniDistAB struct {
 	A, B float64
 }
 
-func (d UnitDistAB) Transform(x float64) float64 {
+func (d UniDistAB) Transform(x float64) float64 {
 	return d.A + (d.B-d.A)*x
 }
 
-func (d UnitDistAB) Prob(x float64) float64 {
+func (d UniDistAB) Prob(x float64) float64 {
 	if x < d.A || x > d.B {
 		return 0
 	}
@@ -83,3 +86,51 @@ func (d UnitDistAB) Prob(x float64) float64 {
 }
 
 // TODO: Linear probability, Normal probability
+type linearDist struct {
+	a, b, alpha, beta, gamma float64
+}
+
+// Create a linear distribution gamma * (alpha * x + beta), with
+// support [a,b]. (The distribution will be scaled by gamma)
+// automatically to ensure normalization.
+func NewLinearDist(a, b, alpha, beta float64) (Distribution, error) {
+	if a >= b {
+		return nil, errors.New("invalid range")
+	}
+
+	dist := linearDist{
+		a, b, alpha, beta, 1 / (beta*(b-a) + alpha/2*(b*b-a*a)),
+	}
+
+	if dist.Prob(a) < 0 || dist.Prob(b) < 0 {
+		return nil, errors.New("the linear function can not be negative within [a, b]")
+	}
+	return dist, nil
+}
+
+func (d linearDist) Transform(x float64) float64 {
+	p := d.beta / d.alpha
+	return -p + math.Sqrt(p*p+d.a*d.a+2*d.a*p+2*d.gamma*x/d.alpha)
+}
+
+func (d linearDist) Prob(x float64) float64 {
+	if x < d.a || x > d.b {
+		return 0
+	}
+	return d.gamma * (d.alpha*x + d.beta)
+}
+
+// Approximately implements a normal distribution
+// with given mean and variance. Sigma must be positive.
+type NormalDist struct {
+	Mu, Sigma float64
+}
+
+func (d NormalDist) Transform(x float64) float64 {
+	// \sqrt{2} \sigma \erf^{-1}(2x - 1) + \mu = y
+	return math.Erfinv(2*x-1)*math.Sqrt2*d.Sigma + d.Mu
+}
+
+func (d NormalDist) Prob(x float64) float64 {
+	return 1 / (math.SqrtPi * math.Sqrt2 * d.Sigma) * math.Exp(-(x-d.Mu)*(x-d.Mu)/(2*d.Sigma*d.Sigma))
+}
