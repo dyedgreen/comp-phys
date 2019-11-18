@@ -35,9 +35,9 @@ func helperTestResults(scheme Integral, t *testing.T) {
 			num, err := Integrate(cases[i], borders[j], borders[j+1], scheme)
 			ana := cases[i+1](borders[j+1]) - cases[i+1](borders[j])
 			if err != nil {
-				t.Error(err, i/2, j/2)
+				t.Error(fmt.Sprintf("error: \"%v\" (%v, analytic: %v, stats: %v)", err, num, ana, scheme.Stats()), i/2, j/2)
 			} else if math.Abs(ana-num) > scheme.Accuracy(nil) {
-				t.Error(fmt.Sprintf("result %v is not approximately %v", num, ana), i/2, j/2)
+				t.Error(fmt.Sprintf("result %v is not approximately %v (stats: %v)", num, ana, scheme.Stats()), i/2, j/2)
 			}
 		}
 	}

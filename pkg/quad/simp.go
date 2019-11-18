@@ -41,6 +41,10 @@ func (simp *simpsonIntegral) Function(fn func(float64) float64) error {
 	return (*trapezoidalIntegral)(simp).Function(fn)
 }
 
+func (simp *simpsonIntegral) Stats() *Stats {
+	return simp.stats
+}
+
 // Integrate implements Integral
 func (simp *simpsonIntegral) Integrate(a, b float64) (float64, error) {
 	// We don't want people messing with the function / accuracy while we are
@@ -96,8 +100,4 @@ func (simp *simpsonIntegral) Integrate(a, b float64) (float64, error) {
 	}
 
 	return integral, simp.stats.Error
-}
-
-func (simp *simpsonIntegral) Stats() *Stats {
-	return simp.stats
 }

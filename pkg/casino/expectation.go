@@ -126,7 +126,7 @@ func (exp *Expectation) result() Result {
 	return Result{
 		Value: exp.value1,
 		// This may suffer from numerical instability, consider
-		// other algorithms! (check https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance)
+		// better algorithms! (check https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance)
 		Variance: exp.value2 - exp.value1*exp.value1,
 		Stats: Stats{
 			Trials:      exp.trials,

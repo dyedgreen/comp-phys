@@ -14,6 +14,7 @@ func wave_fn_2(z float64) float64 {
 }
 
 func main() {
+	// Quadrature integration
 	eps := 1e-6
 
 	trap := quad.NewTrapezoidalIntegral(8)
@@ -36,4 +37,8 @@ func main() {
 	fmt.Println(trap.Stats())
 	fmt.Println("Statistics (Simpson):")
 	fmt.Println(simp.Stats())
+
+	// Monte Carlo Integration
+	accs := []float64{1e-3, 1e-4, 1e-5, 1e-6}
+	
 }

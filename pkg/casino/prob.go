@@ -21,11 +21,18 @@ type Prober interface {
 	Prob(float64) float64
 }
 
+// Supporter returns the support of
+// a probability density.
+type Supporter interface {
+	Support() (float64, float64)
+}
+
 // Distribution is sufficient to
 // sample from a probability distribution
 type Distribution interface {
 	Transformer
 	Prober
+	Supporter
 }
 
 // Sampler allows to sample from a random distribution
@@ -69,6 +76,10 @@ func (_ UniDist) Prob(x float64) float64 {
 	return 1
 }
 
+func (_ UniDist) Support() (float64, float64) {
+	return 0, 1
+}
+
 // Implements a uniform distribution [A, B)
 type UniDistAB struct {
 	A, B float64
@@ -85,7 +96,10 @@ func (d UniDistAB) Prob(x float64) float64 {
 	return 1 / (d.B - d.A)
 }
 
-// TODO: Linear probability, Normal probability
+func (d UniDistAB) Support() (float64, float64) {
+	return d.A, d.B
+}
+
 type linearDist struct {
 	a, b, alpha, beta, gamma float64
 }
@@ -120,6 +134,10 @@ func (d linearDist) Prob(x float64) float64 {
 	return d.gamma * (d.alpha*x + d.beta)
 }
 
+func (d linearDist) Support() (float64, float64) {
+	return d.a, d.b
+}
+
 // Approximately implements a normal distribution
 // with given mean and variance. Sigma must be positive.
 type NormalDist struct {
@@ -133,4 +151,8 @@ func (d NormalDist) Transform(x float64) float64 {
 
 func (d NormalDist) Prob(x float64) float64 {
 	return 1 / (math.SqrtPi * math.Sqrt2 * d.Sigma) * math.Exp(-(x-d.Mu)*(x-d.Mu)/(2*d.Sigma*d.Sigma))
+}
+
+func (d NormalDist) Support() (float64, float64) {
+	return math.Inf(-1), math.Inf(+1)
 }

@@ -49,9 +49,7 @@ func (trap *trapezoidalIntegral) Accuracy(acc *float64) float64 {
 	return trap.accuracy
 }
 
-// Steps implements Integral. Note that at least two
-// steps will always be evaluated, no matter what is
-// set here.
+// Steps implements Integral
 func (trap *trapezoidalIntegral) Steps(stp *int) int {
 	if stp != nil {
 		trap.lock.Lock()
@@ -70,6 +68,10 @@ func (trap *trapezoidalIntegral) Function(fn func(float64) float64) error {
 	defer trap.lock.Unlock()
 	trap.function = fn
 	return nil
+}
+
+func (trap *trapezoidalIntegral) Stats() *Stats {
+	return trap.stats
 }
 
 // Integrate implements Integral
@@ -121,8 +123,4 @@ func (trap *trapezoidalIntegral) Integrate(a, b float64) (float64, error) {
 	}
 
 	return integral, trap.stats.Error
-}
-
-func (trap *trapezoidalIntegral) Stats() *Stats {
-	return trap.stats
 }
