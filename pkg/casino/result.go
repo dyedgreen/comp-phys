@@ -5,7 +5,7 @@ package casino
 type Stats struct {
 	// These are totaled over all run
 	// experiments
-	Burn, Trials, Experiments int
+	Burn, Trials int
 }
 
 // Contains a single scalar

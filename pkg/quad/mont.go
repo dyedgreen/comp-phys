@@ -106,31 +106,29 @@ func (mont *monteCaroloIntegral) Integrate(a, b float64) (float64, error) {
 	}
 
 	steps := 0
-	var prevInt float64
-	var integral float64
 	for steps+mont.batch*mont.workers < mont.steps {
 		steps += mont.batch * mont.workers
-		prevInt = integral
 		res := exp.Refine(mont.batch, mont.workers)
-		integral = res.Value
-		if steps >= mont.batch*mont.workers*5 && math.Abs(integral-prevInt) < mont.accuracy*0.1 {
+		// sigma on expectation estimate is ~ sqrt(variance_estimate / n)
+		// (from central limit theorem)
+		// -> we want to be within 2 sigma
+		if mont.accuracy >= 2*math.Sqrt(res.Variance/float64(steps)) {
 			// We are happy with the results
 			break
 		}
 	}
 
 	// Return final result
-	mont.stats = &Stats{steps, math.Abs(integral - prevInt), nil}
+	res := exp.Result()
+	mont.stats = &Stats{steps, 2 * math.Sqrt(res.Variance/float64(steps)), nil}
 
 	// If we couldn't take any steps, then we have no
 	// estimate for anything ...
 	if steps == 0 {
 		mont.stats.Error = ErrorMinSteps
-	} else if steps < mont.batch*mont.workers*5 {
-		mont.stats.Error = ErrorInsufficientSteps
 	} else if mont.stats.Accuracy > mont.accuracy {
 		mont.stats.Error = ErrorConverge
 	}
 
-	return integral, mont.stats.Error
+	return res.Value, mont.stats.Error
 }

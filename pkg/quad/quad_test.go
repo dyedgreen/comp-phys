@@ -25,7 +25,7 @@ func helperTestResults(scheme Integral, t *testing.T) {
 
 	borders := []float64{
 		// Contains a, b pairs sequentially
-		0, 10,
+		0, 5,
 		-10, 4,
 		-4, 3.5,
 	}

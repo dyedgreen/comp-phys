@@ -3,6 +3,7 @@
 ASSIGNMENTS = $(shell find ./assignment -name "q-*" -type d)
 
 # Default target for happy markers
+all: project
 all: project-run
 
 # Format go sources
@@ -24,8 +25,8 @@ project: test
 project:
 	go build -o ./project/main ./project
 
-project-run: project
 project-run:
+	go build -o ./project/main ./project
 	./project/main
 
 # Build assignment binaries

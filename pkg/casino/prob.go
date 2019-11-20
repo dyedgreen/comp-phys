@@ -35,8 +35,13 @@ type Distribution interface {
 	Supporter
 }
 
+type Sampler interface {
+	Distribution
+	Sample() float64
+}
+
 // Sampler allows to sample from a random distribution
-type Sampler struct {
+type sampler struct {
 	Distribution
 	rng *rand.Rand
 }
@@ -46,22 +51,22 @@ type Sampler struct {
 // to have separate sources for every go routine.
 // Note that the provided dist should be safe for concurrent
 // use.
-func NewSampler(dist Distribution, seed uint64) *Sampler {
+func NewSampler(dist Distribution, seed uint64) Sampler {
 	if dist == nil {
 		// If no distribution is specified, this is a fancy
 		// rand.Rand, with less capabilities.
 		dist = UniDist{}
 	}
-	return &Sampler{dist, rand.New(rand.NewSource(seed))}
+	return &sampler{dist, rand.New(rand.NewSource(seed))}
 }
 
-func NewUniformSampler(a, b float64, seed uint64) *Sampler {
+func NewUniformSampler(a, b float64, seed uint64) Sampler {
 	return NewSampler(UniDistAB{a, b}, seed)
 }
 
 // Returns a random number from the underlying source,
 // transformed according the the contained distribution.
-func (s *Sampler) Sample() float64 {
+func (s *sampler) Sample() float64 {
 	return s.Transform(s.rng.Float64())
 }
 
@@ -73,6 +78,9 @@ func (_ UniDist) Transform(x float64) float64 {
 }
 
 func (_ UniDist) Prob(x float64) float64 {
+	if x < 0 || x > 1 {
+		return 0
+	}
 	return 1
 }
 
@@ -112,19 +120,31 @@ func NewLinearDist(a, b, alpha, beta float64) (Distribution, error) {
 		return nil, errors.New("invalid range")
 	}
 
+	// Ensure the distribution is > 0 over full support
 	dist := linearDist{
-		a, b, alpha, beta, 1 / (beta*(b-a) + alpha/2*(b*b-a*a)),
+		a, b, alpha, beta, 1,
 	}
-
 	if dist.Prob(a) < 0 || dist.Prob(b) < 0 {
 		return nil, errors.New("the linear function can not be negative within [a, b]")
 	}
+
+	// gamma is calculated to normalize the distribution
+	gammaInv := alpha/2*(b*b-a*a) + beta*(b-a)
+	dist.gamma = 1 / gammaInv
+
 	return dist, nil
 }
 
 func (d linearDist) Transform(x float64) float64 {
 	p := d.beta / d.alpha
-	return -p + math.Sqrt(p*p+d.a*d.a+2*d.a*p+2*d.gamma*x/d.alpha)
+	x /= d.gamma
+	sqrt := math.Sqrt(p*p + d.a*d.a + 2*d.a*p + 2*x/d.alpha)
+	// +/- solution depends on sign of a
+	if d.alpha < 0 {
+		return -(p + sqrt)
+	} else {
+		return -p + sqrt
+	}
 }
 
 func (d linearDist) Prob(x float64) float64 {

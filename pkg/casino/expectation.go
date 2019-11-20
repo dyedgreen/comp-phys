@@ -16,25 +16,24 @@ type Expectation struct {
 	// Function to be averaged
 	Function func(float64) float64
 	// Seed determines how the
-	// experiments random number
+	// workers random number
 	// generators are seeded.
 	// This is done by initializing
 	// a PCG generator with seed and
 	// then using it do obtain seeds
-	// for each experiment.
+	// for each worker sequentially.
 	//
 	// This has the effect that for the
-	// same seed, each subsequent
-	// experiment has the same result
-	// if rerun.
+	// same seed, and with the same calls
+	// to refine being made, this will
+	// exactly reproduce the same output.
 	Seed uint64
 	rng  rand.Source
 
-	// Expectations of value and value^2
-	value1, value2 float64
-	// Trials and experiments run to
-	// achieve these averages
-	trials, experiments int
+	// Expectation value (x_bar) and variance (var(x) = m2 / n)
+	x_bar, m2 float64
+	// total number of trials
+	trials int
 
 	lock sync.RWMutex
 }
@@ -51,86 +50,84 @@ func (exp *Expectation) init() {
 }
 
 // Refine will update the expectation
-// and variance estimate using
-func (exp *Expectation) Refine(trials, experiments int) Result {
+// and variance estimate. This will update
+// the estimate of expectation and variance
+// by evaluating the Function trials times in
+// every worker.
+// This calls Function trials * workers times.
+func (exp *Expectation) Refine(trials, workers int) Result {
 	// No touching until we are done!
 	exp.lock.Lock()
 	defer exp.lock.Unlock()
 	exp.init()
 
-	var value1 float64
-	var value2 float64
-
-	values := make(chan struct {
-		v1 float64
-		v2 float64
-	})
-	wait := sync.WaitGroup{}
-
-	// Run the experiments concurrently
-	for i := 0; i < experiments; i++ {
-		seed := exp.rng.Uint64()
-		go func() {
-			sampler := NewSampler(exp, seed)
-			defer wait.Done()
-
-			var sum1, sum2 float64
-			for i := 0; i < trials; i++ {
-				// The key bit, sample a function value
-				v := exp.Function(sampler.Sample())
-				sum1 += v
-				sum2 += v * v
-			}
-			values <- struct {
-				v1 float64
-				v2 float64
-			}{sum1, sum2}
-		}()
+	type valStruct struct {
+		x_bar, m2 float64
 	}
+
+	values := make(chan valStruct)
+	wait := sync.WaitGroup{}
 
 	// Close the values channel once
 	// all the experiments are concluded
-	wait.Add(experiments)
+	wait.Add(workers)
 	go func() {
 		wait.Wait()
 		close(values)
 	}()
 
-	// Sum up all trials
+	// Update the expectation concurrently
+	for i := 0; i < workers; i++ {
+		seed := exp.rng.Uint64()
+		go func() {
+			sampler := NewSampler(exp, seed)
+			defer wait.Done()
+
+			var x_bar_prev float64
+			var x_bar float64
+			var m2 float64
+
+			for n := 1; n <= trials; n++ {
+				// Get a function value, potentially expensive
+				x := exp.Function(sampler.Sample())
+				// Online expectation and variance
+				// updates based on:
+				//
+				//     Welford, B. P. (1962). "Note on a method for calculating corrected sums of
+				//     squares and products". Technometrics. 4 (3): 419–420.
+				//
+				x_bar_prev = x_bar
+				x_bar = x_bar + (x-x_bar)/float64(n)
+				m2 = m2 + (x-x_bar_prev)*(x-x_bar)
+			}
+
+			values <- valStruct{x_bar, m2}
+		}()
+	}
+
+	// Combine calculated expectations based on:
+	//
+	//     Chan, Tony F.; Golub, Gene H.; LeVeque, Randall J. (1979), "Updating Formulae
+	//     and a Pairwise Algorithm for Computing Sample Variances.", Technical Report
+	//     STAN-CS-79-773, Department of Computer Science, Stanford University.
+	//
 	for v := range values {
-		value1 += v.v1
-		value2 += v.v2
+		delta := v.x_bar - exp.x_bar
+		exp.x_bar += delta * float64(trials) / float64(exp.trials+trials)
+		exp.m2 += v.m2 + delta*delta*float64(exp.trials)*float64(trials)/float64(exp.trials+trials)
+		exp.trials += trials
 	}
-
-	// Add previous results if present
-	// TODO: Should I keep the prev results
-	// un-multiplied for efficiency/ less rounding?
-	// FIXME: https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance
-	//        consider these algorithms for improved numeric stability ...
-
-	if exp.trials > 0 {
-		value1 += float64(exp.trials) * exp.value1
-		value2 += float64(exp.trials) * exp.value2
-	}
-
-	// Compute final results
-	exp.trials += trials * experiments
-	exp.experiments += experiments
-	exp.value1 = value1 / float64(exp.trials)
-	exp.value2 = value2 / float64(exp.trials)
 
 	return exp.result()
 }
 
 func (exp *Expectation) result() Result {
 	return Result{
-		Value: exp.value1,
-		// This may suffer from numerical instability, consider
-		// better algorithms! (check https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance)
-		Variance: exp.value2 - exp.value1*exp.value1,
+		Value: exp.x_bar,
+		// Use unbiased variance estimator
+		Variance: exp.m2 / float64(exp.trials-1),
 		Stats: Stats{
-			Trials:      exp.trials,
-			Experiments: exp.experiments,
+			Trials: exp.trials,
 		},
 	}
 }
