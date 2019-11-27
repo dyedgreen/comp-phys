@@ -10,31 +10,67 @@
 
 \graphicspath{ {./images/} }
 
-\title{Computational Physics Project}
+\title{Computational Physics Project \\ Integrating Quantum Probability Densities}
 \author{Tilman Roeder}
 \date{\today}
 
+% Uniform plots
 \newcommand{\plot}[3]{\begin{figure}[ht]\centering\includegraphics[width=10cm]{#1}\caption{#2}\label{#3}\end{figure}}
+
+% Abbreviations
+\newcommand{\abbreviate}[3]{\newcommand{#1}{#3 \textit{(#2)}\renewcommand{#1}{#2}}}
+\abbreviate{\apis}{APIS}{Adaptive Population Importance Sampling}
+
 
 \begin{document}
 \maketitle
 
-\section{Plan}
-- Quad package -> standard integration stuff
-- Casino package -> monte carlo routines
-  -> used by some of the methods in quad (or maybe have some specialized methods in casino)
-- Extensions (no: focus on validation ...)
-  -> use numerov to solve QM / Schrödinger Equation
-  -> use monte carlo to solve PDE (Schrödinger Equation)
-
 \section{Introduction}
+In this report we investigate methods for numerically computing the value of a proper integral.
+The relevant integral under scrutiny is
 
-- introduce problem
+\begin{equation}
+\label{eq:target}
+I = \int_a^b |\Psi(x)|^2 dx = \int_a^b \frac{1}{\sqrt{\pi}} e^{-x^2} dx,
+\end{equation}
+where we are interested in $a = 0$ and $b = 2$.
+
+This is, of course, the normalized Gaussian probability density, for which
+very accurate approximations and tabulated values exist. However, for the purposes of this report, we shall
+treat the value of the integral $I$ as unknown and investigate how to justify our confidence in the
+obtained numerical results.
+
+A comparison of our results with the tabulated values for this integral can be found in appendix
+\ref{app:cheat}.
 
 \section{Algorithms}
+We will explore two general classes of algorithms: deterministic quadrature methods, and different
+Monte-Carlo integration schemes.
+
+\subsection{Quadrature Methods}
+  \subsubsection{Trapezoidal Quadrature}
+
+  \subsubsection{Simpson Rule}
+
+\subsection{Monte-Carlo Integration}
+  \subsubsection{Importance Sampling}
+  When considering any integral, we may notice that
+  \begin{equation}
+  \int_a^b f(x) dx = \int_{a}^{b} \frac{f(x)}{p(x)} p(x) dx = \mathbb{E}_{\sim p(x)}\left[ \frac{f(x)}{p(x)} \right],
+  \end{equation}
+  where $p(x)$ is a probability measure with finite support $[a, b]$ and $\mathbb{E}$ denotes the expected
+  value.
+
+  TODO - Explain the implementation of expected value (and online mean, variance)
+  TODO - explain random number generator used + reference paper
+  TODO - explain set of random seeds used and where they originate from
+  TODO - mention parallel runtime implementation
 
 - explain seeding and maybe change it to supply a range of seeds
   - maybe allow users to add a 'seed-bank'
+
+  \subsubsection{Adaptive Population Importance Sampling}
+  explain the \apis{} algorithm briefly, and reference paper
 
 \section{Ensuring Implementation Correctness}
 
@@ -44,8 +80,10 @@
 \section{Results}
 
 - present results
-- have graphs of how integral values change w/ iterations
-  - including errors for monte-carlo code
+
+- mention that $10^{-6}$ is impossible with MC, report average time for 1 function evaluation given
+  full process parallelization and use this to calculate the order of magnitude of time taken to
+  get to $10^{-6}$, also mention that this will be much more favorable for higher-dimensional integrals
 
 \section{Verification of Results}
 
@@ -61,18 +99,23 @@
   and how we expect that to behave
 
 - compare results of different algorithms + show they agree
-
-\section{Approximate Transform For Normal Distribution}
-\begin{equation}
-\sqrt{2} \sigma \erf^{-1}(2x - 1) + \mu = y
-\end{equation}
+- have graphs of how integral values change w/ iterations
+  - including errors for monte-carlo code
+  - include theoretical "bounds", starting from the converged value
 
 \bibliography{assignment.bib}{}
 \bibliographystyle{plain}
 
 \appendix{}
 
-\section{Appendix here}
-Bla blub.
+\section{Comparison with Tabulated Values}
+\label{app:cheat}
+From tables we obtain
+\begin{equation}
+I = \frac{\operatorname{erf}(2)}{2} = 0.49766113250947636708 \dots,
+\end{equation}
+where $\operatorname{erf}(x) = \frac{1}{\sqrt\pi}\int_{-x}^x e^{-t^2} dt$ is the Error function.
+
+TODO: Compare result with tabulated values here ...
 
 \end{document}
