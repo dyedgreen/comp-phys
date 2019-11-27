@@ -6,13 +6,13 @@ type uniformMonteCarloIntegral monteCaroloIntegral
 
 // NewUniformIntegral is a helper for creating a Monte-Carlo
 // integral with uniform sampling function.
-func NewUniformMonteCarloIntegral(workers, batch int, seed uint64) Integral {
+func NewUniformMonteCarloIntegral(workers, batch int, seeds []uint64) Integral {
 	return &uniformMonteCarloIntegral{
 		accuracy: defaultMonteCarloAccuracy,
 		steps:    defaultMonteCarloStep,
 		workers:  workers,
 		batch:    batch,
-		seed:     seed,
+		seeds:    padSeeds(seeds, workers),
 	}
 }
 

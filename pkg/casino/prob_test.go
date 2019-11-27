@@ -20,3 +20,9 @@ func TestSampler(t *testing.T) {
 		}
 	}
 }
+
+// Note: These distributions are tested, by running
+// tests for the expected value calculations. These
+// tests are fast to run and allow us to determine
+// if the 1st and 2nd order moments are faithfully
+// reproduced.

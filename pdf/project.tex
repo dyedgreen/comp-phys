@@ -27,8 +27,38 @@
   -> use numerov to solve QM / Schrödinger Equation
   -> use monte carlo to solve PDE (Schrödinger Equation)
 
-\section{A section}
-Bla blub.
+\section{Introduction}
+
+- introduce problem
+
+\section{Algorithms}
+
+- explain seeding and maybe change it to supply a range of seeds
+  - maybe allow users to add a 'seed-bank'
+
+\section{Ensuring Implementation Correctness}
+
+- explain unit tests
+- outline tests run and test coverage
+
+\section{Results}
+
+- present results
+
+\section{Verification of Results}
+
+- show that integrand is smooth (possibly even Lipschitz), and proof/ explain why this leads to
+  correct results in integral from quadrature method
+  - analyze numeric error under perfect arithmetic for our integrand
+
+- analyze numeric properties of quadrature method used and estimate numeric error incurred
+
+- analyze numeric stability of monte-carlo method used
+
+- outline variance on integral supplied and explain that we use a two-sigma error range to
+  and how we expect that to behave
+
+- compare results of different algorithms + show they agree
 
 \section{Approximate Transform For Normal Distribution}
 \begin{equation}

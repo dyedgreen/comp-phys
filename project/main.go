@@ -33,6 +33,7 @@ func main() {
 		panic(err)
 	}
 
+	fmt.Println("\n-- Results (Quadrature Methods) --\n")
 	fmt.Printf("We find P = %v (Trapezoidal)\n        P = %v (Simpson)\n", P1, P2)
 	fmt.Println("Statistics:")
 	fmt.Println(trap.Stats())
@@ -41,12 +42,12 @@ func main() {
 	// Monte Carlo Integration
 	accs := []float64{1e-3, 1e-4, 1e-5, 1e-6}
 
-	montFlat := quad.NewUniformMonteCarloIntegral(8, 64, 42)
+	montFlat := quad.NewUniformMonteCarloIntegral(8, 64, casino.Noise(64))
 	dist, err := casino.NewLinearDist(0, 2, -0.48, 0.98)
 	if err != nil {
 		panic(err)
 	}
-	montSlanted := quad.NewMonteCarloIntegral(dist, 8, 64, 42)
+	montSlanted := quad.NewMonteCarloIntegral(dist, 8, 64, casino.Noise(64))
 
 	fmt.Println("\n-- Monte Carlo Results (Flat) --\n")
 	for _, acc := range accs {

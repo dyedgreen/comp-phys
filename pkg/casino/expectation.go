@@ -2,8 +2,6 @@ package casino
 
 import (
 	"sync"
-
-	"golang.org/x/exp/rand"
 )
 
 // Expectation can be used to find the
@@ -18,17 +16,13 @@ type Expectation struct {
 	// Seed determines how the
 	// workers random number
 	// generators are seeded.
-	// This is done by initializing
-	// a PCG generator with seed and
-	// then using it do obtain seeds
-	// for each worker sequentially.
 	//
-	// This has the effect that for the
-	// same seed, and with the same calls
-	// to refine being made, this will
-	// exactly reproduce the same output.
-	Seed uint64
-	rng  rand.Source
+	// If the number of seeds
+	// exceeds the number of
+	// desired workers, then
+	// refine will panic.
+	Seeds    []uint64
+	samplers []Sampler
 
 	// Expectation value (x_bar) and variance (var(x) = m2 / n)
 	x_bar, m2 float64
@@ -44,8 +38,11 @@ type Expectation struct {
 // the type can be used in it's null
 // value.
 func (exp *Expectation) init() {
-	if exp.rng == nil {
-		exp.rng = rand.NewSource(exp.Seed)
+	if exp.samplers == nil {
+		exp.samplers = make([]Sampler, len(exp.Seeds), len(exp.Seeds))
+		for i := range exp.samplers {
+			exp.samplers[i] = NewSampler(exp, exp.Seeds[i])
+		}
 	}
 }
 
@@ -60,6 +57,11 @@ func (exp *Expectation) Refine(trials, workers int) Result {
 	exp.lock.Lock()
 	defer exp.lock.Unlock()
 	exp.init()
+
+	// Raise panic if insufficient seeds provided
+	if workers > len(exp.samplers) {
+		panic("insufficient seeds provided to run workers")
+	}
 
 	type valStruct struct {
 		x_bar, m2 float64
@@ -78,9 +80,8 @@ func (exp *Expectation) Refine(trials, workers int) Result {
 
 	// Update the expectation concurrently
 	for i := 0; i < workers; i++ {
-		seed := exp.rng.Uint64()
-		go func() {
-			sampler := NewSampler(exp, seed)
+		// each worker uses a separate sampler
+		go func(sampler int) {
 			defer wait.Done()
 
 			var x_bar_prev float64
@@ -89,7 +90,7 @@ func (exp *Expectation) Refine(trials, workers int) Result {
 
 			for n := 1; n <= trials; n++ {
 				// Get a function value, potentially expensive
-				x := exp.Function(sampler.Sample())
+				x := exp.Function(exp.samplers[sampler].Sample())
 				// Online expectation and variance
 				// updates based on:
 				//
@@ -102,7 +103,7 @@ func (exp *Expectation) Refine(trials, workers int) Result {
 			}
 
 			values <- valStruct{x_bar, m2}
-		}()
+		}(i)
 	}
 
 	// Combine calculated expectations based on:

@@ -28,7 +28,17 @@ func helperTestResults(scheme Integral, t *testing.T) {
 		0, 5,
 		-10, 4,
 		-4, 3.5,
+		3, 3.1,
 	}
+
+	// Generate more random test cases
+	randBorders := make([]float64, 20)
+	rand.Seed(42)
+	for i := 0; i < len(randBorders); i += 2 {
+		randBorders[i] = rand.Float64()*15 - 10
+		randBorders[i+1] = randBorders[i] + rand.Float64()*(5-randBorders[i])
+	}
+	borders = append(borders, randBorders...)
 
 	for i := 0; i < len(cases); i += 2 {
 		for j := 0; j < len(borders); j += 2 {

@@ -60,6 +60,8 @@ func NewSampler(dist Distribution, seed uint64) Sampler {
 	return &sampler{dist, rand.New(rand.NewSource(seed))}
 }
 
+// NewUniformSampler is a convenience method that is equivalent to
+// NewSampler(UniDistAB{a, b}, seed)
 func NewUniformSampler(a, b float64, seed uint64) Sampler {
 	return NewSampler(UniDistAB{a, b}, seed)
 }

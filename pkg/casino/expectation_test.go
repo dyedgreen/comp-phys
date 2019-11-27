@@ -46,8 +46,10 @@ func TestExpect(t *testing.T) {
 		2.0/3.0 - 0.5 - 1.0/9.0,
 	}
 
+	seeds := Noise(workers)
+
 	for i := range dists {
-		e := Expectation{Distribution: dists[i], Function: unity, Seed: 42}
+		e := Expectation{Distribution: dists[i], Function: unity, Seeds: seeds}
 		stats := e.Refine(trials, workers)
 		if stats.Trials != trials*workers {
 			t.Error("wrong number of trials conducted")

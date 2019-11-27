@@ -22,10 +22,18 @@ type monteCaroloIntegral struct {
 	steps          int
 	function       func(float64) float64
 	workers, batch int
-	seed           uint64
+	seeds          []uint64
 	stats          *Stats
 
 	lock sync.RWMutex
+}
+
+// Pad seed array
+func padSeeds(seeds []uint64, n int) []uint64 {
+	for i := 0; len(seeds) < n; i++ {
+		seeds = append(seeds, seeds[i]+1)
+	}
+	return seeds
 }
 
 // Returns an integral that is evaluated using a
@@ -38,14 +46,21 @@ type monteCaroloIntegral struct {
 // trials to run per experiment/ worker.
 // This means, we always run workers*batch
 // steps at a time to refine.
-func NewMonteCarloIntegral(dist casino.Distribution, workers, batch int, seed uint64) Integral {
+//
+// You should always provide as many seeds as
+// workers. If insufficient seeds are provided,
+// the seed slice is padded with extra seeds
+// by incrementing the previous seeds. Note
+// that this strategy may lead to duplicate
+// seeds.
+func NewMonteCarloIntegral(dist casino.Distribution, workers, batch int, seeds []uint64) Integral {
 	return &monteCaroloIntegral{
 		Distribution: dist,
 		accuracy:     defaultMonteCarloAccuracy,
 		steps:        defaultMonteCarloStep,
 		workers:      workers,
 		batch:        batch,
-		seed:         seed,
+		seeds:        padSeeds(seeds, workers),
 	}
 }
 
@@ -102,7 +117,7 @@ func (mont *monteCaroloIntegral) Integrate(a, b float64) (float64, error) {
 		Function: func(x float64) float64 {
 			return mont.function(x) / mont.Prob(x)
 		},
-		Seed: mont.seed,
+		Seeds: mont.seeds,
 	}
 
 	steps := 0
