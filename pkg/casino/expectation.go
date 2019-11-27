@@ -6,7 +6,8 @@ import (
 
 // Expectation can be used to find the
 // expectation of a function under a
-// given distribution.
+// given distribution by repeatedly
+// sampling from a provided distribution.
 type Expectation struct {
 	// The distribution used to
 	// sample from

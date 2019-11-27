@@ -39,7 +39,10 @@ func padSeeds(seeds []uint64, n int) []uint64 {
 // Returns an integral that is evaluated using a
 // Monte-Carlo computation of the form:
 //
-//     int(f) = exp(f/p)
+//     int(f) = exp(f/p) ~ p
+//
+// i.e. this scheme implements an importance
+// sampling algorithm.
 //
 // workers specifies how many experiments to
 // run concurrently, batch specifies how many

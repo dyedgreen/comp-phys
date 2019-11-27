@@ -1,6 +1,7 @@
 # Some useful make targets
 
 ASSIGNMENTS = $(shell find ./assignment -name "q-*" -type d)
+ZIP_NAME = "Roeder-Tilman-CP2019-Assignment-Code.zip"
 
 # Default target for happy markers
 all: project
@@ -61,7 +62,7 @@ clean:
 	rm $(shell find ./assignment -not -name "*.go" -and -not -name "*.c" -and -not -name "*.h" -type f) || :
 	rm $(shell find ./project -not -name "*.go" -and -not -name "*.c" -and -not -name "*.h" -type f) || :
 	rm $(shell find ./pdf -not -name "*.tex" -and -not -name "*.bib" -type f) || :
-	rm comp-phys.zip testcov.log || :
+	rm $(ZIP_NAME) testcov.log || :
 
 # Build assignment report
 pdf: assignment
@@ -74,6 +75,6 @@ pdf:
 zip: clean
 zip:
 	rm comp-phys.zip || :
-	zip --symlinks -r comp-phys.zip .
+	zip --symlinks -r $(ZIP_NAME) .
 
 .PHONY: all fmt test clean pdf zip $(ASSIGNMENTS) project cover

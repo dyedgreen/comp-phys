@@ -42,12 +42,12 @@ func main() {
 	// Monte Carlo Integration
 	accs := []float64{1e-3, 1e-4, 1e-5, 1e-6}
 
-	montFlat := quad.NewUniformMonteCarloIntegral(8, 64, casino.Noise(64))
+	montFlat := quad.NewUniformMonteCarloIntegral(64, 64, casino.Noise(64))
 	dist, err := casino.NewLinearDist(0, 2, -0.48, 0.98)
 	if err != nil {
 		panic(err)
 	}
-	montSlanted := quad.NewMonteCarloIntegral(dist, 8, 64, casino.Noise(64))
+	montSlanted := quad.NewMonteCarloIntegral(dist, 64, 64, casino.Noise(64))
 
 	fmt.Println("\n-- Monte Carlo Results (Flat) --\n")
 	for _, acc := range accs {
