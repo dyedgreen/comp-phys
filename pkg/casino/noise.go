@@ -136,8 +136,16 @@ func Noise(n int) []uint64 {
 	}
 	res := make([]uint64, n, n)
 	for i := range res {
-		res[i] = noise[last%len(noise)]
-		last += 1
+		res[i] = noise[last]
+		last = (last + 1) % len(noise)
 	}
 	return res
+}
+
+// Seed returns a single seed taken
+// from noise.
+func Seed() (seed uint64) {
+	seed = noise[last]
+	last = (last + 1) % len(noise)
+	return
 }

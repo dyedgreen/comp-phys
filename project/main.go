@@ -80,4 +80,24 @@ func main() {
 			break
 		}
 	}
+
+	// APIS (still Monte-Carlo)
+	mus, sigmas := casino.APISFamily(casino.NewSampler(casino.UniDistAB{-10, 10}, casino.Seed()), 32)
+	apis := casino.APIS{
+		Function: func(x float64) float64 {
+			// This is the finite support we're integrating over
+			if x < 0 || x > 2 {
+				return 0
+			}
+			return 1
+		},
+		Pi:     wave_fn_2,
+		Epochs: 128, Iterations: 32,
+		Mus: mus, Sigmas: sigmas,
+		Seeds: casino.Noise(32),
+	}
+
+	fmt.Println("\n-- Monte Carlo Results (APIS) --\n")
+	P, Z := apis.Estimate()
+	fmt.Printf("        P = %v\n        Z = %v\n", P, Z)
 }

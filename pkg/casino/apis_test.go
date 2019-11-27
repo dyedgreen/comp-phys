@@ -3,29 +3,20 @@ package casino
 import (
 	"fmt"
 	"math"
-	"math/rand"
 	"testing"
 )
 
 // Basic tests to make sure APIS is
 // implemented correctly.
 func TestAPIS(t *testing.T) {
-	mus := make([]float64, 10)
-	sigs := make([]float64, 10)
-	for i := range mus {
-		mus[i] = rand.Float64() * 10
-		if rand.Float64() > 0.5 {
-			mus[i] *= -1
-		}
-		sigs[i] = rand.Float64() * 10
-	}
+	mus, sigmas := APISFamily(NewSampler(UniDistAB{-10, 10}, Seed()), 10)
 
 	// Can a Gaussian estimate a Gaussian?
 	norm := NormalDist{0, 1}
 	apis := APIS{
 		func(x float64) float64 { return x * x }, norm.Prob,
 		64, 32,
-		mus, sigs,
+		mus, sigmas,
 		Noise(10),
 	}
 

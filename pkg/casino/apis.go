@@ -122,3 +122,18 @@ func (apis *APIS) Estimate() (I, Z float64) {
 	Z = L / float64(len(samplers)) / float64(apis.Epochs*apis.Iterations)
 	return
 }
+
+// APISFamily will generate a random
+// APIS Gaussian family. This is a way
+// to conveniently seed your APIS.
+func APISFamily(sampler Sampler, size int) ([]float64, []float64) {
+	mus, sigmas := make([]float64, size), make([]float64, size)
+	for i := range mus {
+		mus[i] = sampler.Sample()
+		sigmas[i] = sampler.Sample()
+		if sigmas[i] < 0 {
+			sigmas[i] *= -1
+		}
+	}
+	return mus, sigmas
+}
