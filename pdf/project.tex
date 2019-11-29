@@ -20,6 +20,7 @@
 % Abbreviations
 \newcommand{\abbreviate}[3]{\newcommand{#1}{#3 \textit{(#2)}\renewcommand{#1}{#2}}}
 \abbreviate{\apis}{APIS}{Adaptive Population Importance Sampling}
+\abbreviate{\iid}{i.i.d.}{independent and identically distributed}
 
 
 \begin{document}
@@ -44,30 +45,164 @@ A comparison of our results with the tabulated values for this integral can be f
 \ref{app:cheat}.
 
 \section{Algorithms}
-We will explore two general classes of algorithms: deterministic quadrature methods, and different
+We will explore two general classes of algorithms: deterministic quadrature methods, and probabilistic
 Monte-Carlo integration schemes.
 
 \subsection{Quadrature Methods}
-  \subsubsection{Trapezoidal Quadrature}
+  \subsubsection{Trapezoidal Rule}
+  \label{sec:trap}
+  First, we will consider the trapezoidal quadrature method. Here, we approximate the integrand $f(x)$
+  as a linear function between the two step points, going through $f(x)$ in both points.
+
+  Then, if the function $f$ is analytic, we have $f(x) = f_0 + f_1 (x-x_0) + \mathcal{O}((x-x_0)^2)$\footnotemark
+  and thus
+  \begin{equation}
+  \int_a^b f(x) dx \approx
+  \int_a^b f(x) + \frac{f(b) - f(a)}{b-a} (x-a) + \mathcal{O}(x^2) dx =
+  \frac{1}{2} h (f(a) + f(b)) + \mathcal{O}(h^3),
+  \end{equation}
+  where $h = b-a$ and $x_0 \in [a,b]$.
+
+  \footnotetext{
+    This follows, as for analytic functions $\forall a, b \exists x_0 \in [a, b]$ s.t.
+    $f^\prime(x_0) = \frac{f(b)-f(a)}{b-a}$.
+  }
+
+  Now if we wish to compute the integral over a long range $[a, b]$, we may extend the rule by dividing
+  the integration region into $N$ sub-integrals so that
+  \begin{equation}
+  \begin{split}
+  I = \int_a^b f(x) dx & = \sum_{i=0}^{N-1} \int_{a+ih}^{a+(i+1)h} f(x) dx \\
+  & = \sum_{i=0}^{N-1} \frac{1}{2} h (f(a+ih) + f(a+(i+1)h)) + \mathcal{O}(h^3) \\
+  & = \frac{1}{2} h (f(a) + f(b)) + \left( \sum_{i=1}^{N-1} h f(a+ih) \right) + \mathcal{O}(h^2),
+  \end{split}
+  \end{equation}
+  where $h = \frac{b-a}{N}$.
+
+  Notice that in this case, given a desired accuracy $\epsilon$, we expect that $N \sim \frac{b-a}{\sqrt{\epsilon}}$,
+  function evaluations should be necessary to determine the function at the desired accuracy, presuming
+  arbitrarily precise arithmetic.
+
+  This can be implemented algorithmically, where we require $\mathcal{O}(N)$ time and $\mathcal{O}(1)$,
+  space. However, making use of the strong support for parallel computing in modern CPUs and the Go
+  programming language, we can reduce the time complexity of this algorithm by a factor of $M$, where $M$
+  is the number of processes we can run concurrently\footnotemark.
+
+  \footnotetext{This is true, since $M$ is limited by the number of cores in our processing unit. Given
+  a theoretically infinite amount of truly concurrent processes, we would want to choose a scheme that
+  combines two numbers at a time, leading to $\log_2(N)$ threads. It is clear that for any interesting
+  use case this is limited by the number of processing cores available.}
+
+  Further, we implement a scheme which progressively increases the number of steps taken until the
+  approximation to the integral reaches a desired accuracy. This is achieved by progressively sub-dividing
+  the integration region, adding points half-way between the existing samples for every step \cite{nr}.
+
+  Under this scheme, the integral can be computed as
+  \begin{equation}
+  \label{eq:trap-rec}
+  I_m = \frac{I_m}{2} + \sum_i h_m f(x^{(m)}_i),
+  \end{equation}
+  where $m$ denotes the refinement step, $I_0 = \frac{h_0 (f(a) + f(b))}{2}$, $h_0 = b-a$,
+  $h_m = \frac{h_{m-1}}{2}$, and $x^{(m)}_i$
+  range over the subdivisions at the $m^{\text{th}}$ refinement stage.
+
+  A quick way to estimate the error after a given steps, is to compute $\epsilon_m \approx |I_m - I_{m-1}|$
+  \cite{nr}.
+
+  This algorithm is implemented in \texttt{pkg/quad/trap.go}. The implementation parallelizes the computation
+  of the summation in equation \ref{eq:trap-rec}, which is implemented in \texttt{pkg/quad/trap\_step.go}.
+  The \texttt{quad} package defines a generic \texttt{Integral} interface, which can be used to integrate
+  a function, given a specific integration scheme. The constructor of the trapezoidal scheme permits the
+  user to specify the number of worker routines desired when computing the successive steps of the integral.
+
+  The algorithm used to parallelize the steps is built on the assumption that computation of the integrand
+  $f(x)$ is in general non-trivial and the most expensive operation in the integration process. Thus, the
+  algorithm has a worst case runtime of $\mathcal{O}(N)$, and a best case runtime of $\mathcal{O}(\frac{N}{M})$
 
   \subsubsection{Simpson Rule}
+  This quadrature method is closely related to the Trapezoidal Rule\footnotemark. We consider the integrand
+  $f(x)$ to be approximated by a quadratic polynomial, passing through the function $f(x)$ at the points
+  $a$, $\frac{a+b}{2}$, and $b$.
+
+  \footnotetext{Indeed, we may understand both as special cases of the Runge-Kutta scheme for integrating
+  ordinary first order differential equations\cite{nr}.}
+
+  We can derive Simpson's rule by considering the following Ansatz:
+  \begin{equation}
+  \frac{1}{b-a} \int_a^b q(x) dx = \alpha q(a) + \beta q(\frac{a+b}{2}) + \gamma q(b),
+  \end{equation}
+  where $q(x)$ is a quadratic polynomial. And then determining the coefficients $\alpha$, $\beta$, and $\gamma$
+  such that this holds for any $q(x)$. However, by choosing to evaluate $f(x)$ in the center of the interval,
+  we find that this equation can be satisfied not just for second order polynomials $q(x)$, but also
+  for all third order polynomials $q(x)$. Then:
+
+  \begin{equation}
+  \begin{split}
+  \int_a^b f(x) dx &= \int_a^b f(a) + f^\prime(a) (x-a) + f^{\prime\prime}(a) (x-a)^2 + f^{(3)}(a) (x-a)^3 + \mathcal{O}\left((x-a)^4\right) dx \\
+  &= h \left( \frac{1}{6} f(a) + \frac{4}{6} f(\frac{a+b}{2}) + \frac{1}{6} f(b) \right) + \mathcal{O}(h^5),
+  \end{split}
+  \end{equation}
+  where $h = b-a$, and we have used that $\alpha = \gamma = \frac{1}{6}$ and $\beta = \frac{4}{6}$.
+
+  As before, we obtain a total error of $\mathcal{O}(h^4)$, when summing this rule over a range subdivided
+  into $N$ segments, with $h = \frac{b-a}{N}$.
+
+  It should be noted that when employing the refinement scheme outlined in section \ref{sec:trap},
+  one can obtain the following result\cite{nr}:
+
+  \begin{equation}
+  I_m^{\text{Simpson}} = \frac{4}{3} I_{m+1}^{\text{Trapezoidal}} - \frac{1}{3} I_m^{\text{Trapezoidal}}.
+  \end{equation}
+
+  Using this fact, the Simpson integration scheme is implemented in \texttt{pkg/quad/simp.go}. It
+  reuses the function for computing trapezoidal integral approximations and thus directly benefits from
+  the parallelized algorithm implemented for the evaluation under the Trapezoidal scheme, outlined in
+  section \ref{sec:trap}.
 
 \subsection{Monte-Carlo Integration}
   \subsubsection{Importance Sampling}
-  When considering any integral, we may notice that
+  We start by considering the integral
   \begin{equation}
   \int_a^b f(x) dx = \int_{a}^{b} \frac{f(x)}{p(x)} p(x) dx = \mathbb{E}_{\sim p(x)}\left[ \frac{f(x)}{p(x)} \right],
   \end{equation}
-  where $p(x)$ is a probability measure with finite support $[a, b]$ and $\mathbb{E}$ denotes the expected
+  where $p(x)$ is a probability measure with support $[a, b]$ and $\mathbb{E}$ denotes the expected
   value.
+
+  We can see that in general, we may compute any integral by determining the expected value
+  $\mathbb{E}\left[ \frac{f(x)}{p(x)} \right]$. Further, we can easily estimate this
+  statistic using
+
+  \begin{equation}
+  \bar{x}_N = \frac{1}{N} \sum_n=1^N x_n,
+  \end{equation}
+  with $x_n \sim p(x)$, as $\mathbb{E}[\bar{x}_N] = \mathbb{E}[x]$. Using the central limit theorem for
+  \iid{} samples we can also provide the variance on our estimate. Specifically, for \iid{} samples,
+  we have
+
+  \begin{equation}
+  \operatorname{var}(\bar{x}_N) = \frac{\operatorname{var}(x)}{N}.
+  \end{equation}
+
+  Of course we can also estimate the variance given the set of $N$ \iid{} samples $x_n \sim p(x)$
+  \begin{equation}
+  \bar{\sigma}_x^2 = \frac{1}{N-1} \sum_{n=1}^N (x_n - \bar{x}_N)^2,
+  \end{equation}
+  where we used Bessel's Correction\cite{nr} to obtain an unbiased estimator for the variance such
+  that
+  \begin{equation}
+  \mathbb{E}\left[\bar{\sigma}_x^2\right] = \operatorname{var}(x).
+  \end{equation}
+
+
+  cite NR
 
   TODO - Explain the implementation of expected value (and online mean, variance)
   TODO - explain random number generator used + reference paper
   TODO - explain set of random seeds used and where they originate from
   TODO - mention parallel runtime implementation
 
-- explain seeding and maybe change it to supply a range of seeds
-  - maybe allow users to add a 'seed-bank'
+  TODO - explain that we use rejection and how it's a trade of from using transformation method
+         - less entropy, less sampling; but worse variance 
 
   \subsubsection{Adaptive Population Importance Sampling}
   explain the \apis{} algorithm briefly, and reference paper

@@ -8,6 +8,8 @@
 **.log
 **.aux
 **.out
+**.bbl
+**.blg
 
 # Messing around
 test
