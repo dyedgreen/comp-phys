@@ -72,8 +72,8 @@ clean:
 pdf: assignment
 pdf: project-graphs
 pdf:
-	cd ./pdf && pdflatex ./assignment.tex && bibtex ./assignment.aux && pdflatex ./assignment.tex
-	cd ./pdf && pdflatex ./project.tex && bibtex ./project.aux && pdflatex ./project.tex
+	cd ./pdf && pdflatex ./assignment.tex && bibtex ./assignment.aux && pdflatex ./assignment.tex && pdflatex ./assignment.tex
+	cd ./pdf && pdflatex ./project.tex && bibtex ./project.aux && pdflatex ./project.tex && pdflatex ./project.tex
 
 # Build zip for submission
 zip: clean
