@@ -180,6 +180,7 @@ Monte-Carlo integration schemes.
   we have
 
   \begin{equation}
+  \label{eq:var}
   \operatorname{var}(\bar{x}_N) = \frac{\operatorname{var}(x)}{N}.
   \end{equation}
 
@@ -193,6 +194,19 @@ Monte-Carlo integration schemes.
   \mathbb{E}\left[\bar{\sigma}_x^2\right] = \operatorname{var}(x).
   \end{equation}
 
+  As can be seen in equation \ref{eq:var}, the error on our estimate scales as $\sim \frac{1}{\sqrt{N}}$.
+  Thus, we require to capture many random samples to achieve a high accuracy. Specifically, we would
+  like to parallelize sampling, as one \iid{} sample can be taken and processed independently from
+  all others, while also being able to interactively refine the estimates we have until we are
+  satisfied with the error on $\bar{x}_N$.
+
+  To this end, the algorithm implemented in \texttt{pkg/casino/expectation.go} does multiple things.
+  The current state of the computation is encapsulated in a structure called \texttt{Expectation}.
+  Then, a consumer of this API can make consecutive calls to refine the estimates for $\bar{x}$ and
+  $\operatorname{var}(x)$, until they are satisfied.
+
+  Every for every refinement, the work load is split up into a specified number of runners, each of
+  which compute an equal amount of \iid{} samples
 
   cite NR
 

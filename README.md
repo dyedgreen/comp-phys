@@ -8,6 +8,14 @@ use `make project`.
 To build and run all assignment code with default data a simple `make assignment` should suffice. To
 generate the submitted reports run `make pdf` and to generate the submitted ZIP archive run `make zip`.
 
+## PNG and other Graph Formats
+
+There have been complaints about the graphs being generated as `.pdf` files. When running `make pdf`,
+the graphs are generated in `.pdf` format to produce a high-quality report document. If the marker
+wishes to inspect the graphs as some other format (e.g. `.png`), they are free to run `./main -graph`,
+in the `/project` directory. (Run `./main` to see available options. Make sure to build the project
+first!)
+
 ## Running Tests
 
 To run tests, use `make test`. (To see a code coverage breakdown, use `make cover`.)
@@ -46,6 +54,7 @@ To remove everything, deinstall Go using your package manager, then delete `$HOM
 - `/pdf` ---------- LaTeX code for submission PDFs
 - `/pkg` ---------- reusable packages
 - `/problems` ----- answers to problem sheets
+- `/project` ------ project binary code
 
 
 ## License

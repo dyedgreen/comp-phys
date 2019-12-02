@@ -28,7 +28,11 @@ project:
 
 project-run:
 	go build -o ./project/main ./project
-	./project/main
+	./project/main -data
+
+project-graphs: project
+project-graphs:
+	cd ./project && ./main -graph -format pdf
 
 # Build assignment binaries
 $(ASSIGNMENTS):
@@ -66,7 +70,7 @@ clean:
 
 # Build assignment report
 pdf: assignment
-pdf: project
+pdf: project-graphs
 pdf:
 	cd ./pdf && pdflatex ./assignment.tex && bibtex ./assignment.aux && pdflatex ./assignment.tex
 	cd ./pdf && pdflatex ./project.tex && bibtex ./project.aux && pdflatex ./project.tex
