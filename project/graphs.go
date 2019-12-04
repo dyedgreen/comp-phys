@@ -131,7 +131,7 @@ func genGraphs() {
 	montFlat.Accuracy(&eps)
 	montSlanted.Accuracy(&eps)
 
-	plotForScheme("Accuracy Flat Importance Sampling", "mont-flat-accuracy", montFlat, func(n float64) float64 {
+	plotForScheme("Accuracy Uniform Importance Sampling", "mont-flat-accuracy", montFlat, func(n float64) float64 {
 		return 0.8 / math.Sqrt(n) // sqrt(var / n)
 	})
 	plotForScheme("Accuracy Slanted Importance Sampling", "mont-slanted-accuracy", montSlanted, func(n float64) float64 {

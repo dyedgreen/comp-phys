@@ -38,7 +38,7 @@ func genData() {
 	accs := []float64{1e-3, 1e-4, 1e-5, 1e-6}
 
 	montFlat := quad.NewUniformMonteCarloIntegral(128, 128, casino.Noise(64))
-	dist, err := casino.NewLinearDist(A, 2, -0.48, 0.98)
+	dist, err := casino.NewLinearDist(A, B, -0.48, 0.98)
 	if err != nil {
 		panic(err)
 	}

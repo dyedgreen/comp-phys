@@ -21,7 +21,10 @@
 \newcommand{\abbreviate}[3]{\newcommand{#1}{#3 \textit{(#2)}\renewcommand{#1}{#2}}}
 \abbreviate{\apis}{APIS}{Adaptive Population Importance Sampling}
 \abbreviate{\iid}{i.i.d.}{independent and identically distributed}
+\abbreviate{\is}{IS}{Importance Sampling}
 
+
+\newcommand{\final}{$I = 0.497661132 \pm 2\times10^{-9}$}
 
 \begin{document}
 \maketitle
@@ -107,7 +110,7 @@ Monte-Carlo integration schemes.
   $h_m = \frac{h_{m-1}}{2}$, and $x^{(m)}_i$
   range over the subdivisions at the $m^{\text{th}}$ refinement stage.
 
-  A quick way to estimate the error after a given steps, is to compute $\epsilon_m \approx |I_m - I_{m-1}|$
+  A quick way to estimate the error after a given step, is to compute $\epsilon_m \approx |I_m - I_{m-1}|$
   \cite{nr}.
 
   This algorithm is implemented in \texttt{pkg/quad/trap.go}. The implementation parallelizes the computation
@@ -251,10 +254,13 @@ Monte-Carlo integration schemes.
   Thus initially, we have $N_B = N_A$, but both are small, while later we have $N_A \gg N_B$.
 
   Note that the algorithm implemented in \texttt{/pkg/casino} does only compute the expectation of a
-  statistic $x$. The importance sampling, which is trivial to implement given a means of computing
+  statistic $x$. The \is{}, which is trivial to implement given a means of computing
   expected values and variances, is implemented by \texttt{/pkg/quad/mont.go}. It merely uses the
   expectation calculation to refine $\mathbb{E}\left[ \frac{f(x)}{p(x)} \right]$ until the desired
   accuracy is reached\footnote{Or the sample limit is exceeded.}.
+
+  The algorithm implementing the \is{} integration, reports the accuracy as
+  $2\frac{\bar\sigma_N}{\sqrt N}$.
 
   It should also be mentioned, that the choice of proposal function is a very important factor in
   obtaining a small variance on the final result. We could try to sample from a distribution which
@@ -266,26 +272,14 @@ Monte-Carlo integration schemes.
 
   \footnotetext{Or know the integral already, which would allow us to to transformation based sampling.}
 
-  % DONE - Explain the implementation of expected value (and online mean, variance)
-  % DONE - explain random number generator used + reference paper
-  % DONE - explain set of random seeds used and where they originate from
-  % DONE - mention parallel runtime implementation
-
-  % DONE - explain that we use rejection and how it's a trade of from using transformation method
-  %        - less entropy, less sampling; but worse variance 
-
   \subsubsection{Adaptive Population Importance Sampling}
-  The \apis{} algorithm is an generic algorithm for performing adaptive importance sampling. The goal
+  The \apis{} algorithm is an generic algorithm for performing adaptive \is{}. The goal
   of this general class of algorithms is to adapt the proposal distribution used for computation, in
-  order to improve the convergence rate.
+  order to improve the convergence rate. Here, we use \apis{} as an example of this more general class
+  of algorithms.
 
-  Here, we use \apis{} as an example of this more general class of algorithms. It should be noted, that
-  the variety of \apis{} we implement utilizes a family of Gaussian proposal functions, which means that
-  we effectively have to reject many samples, leading to sub-par performance on our specific problem.
-  However, the algorithm nicely illustrates the principle behind adaptive sampling techniques.
-
-  The basic idea behind \apis{} is to perform standard importance sampling, for a number of epochs.
-  Then utilize a statistic that we estimated alongside the importance sampling process to adapt
+  The basic idea behind \apis{} is to perform standard \is{}, for a number of epochs.
+  Then utilize a statistic that we estimated alongside the \is{} process to adapt
   the family of proposal distributions to better resemble the target distribution\cite{apis}.
 
   Specifically, we try to evaluate
@@ -330,43 +324,140 @@ Monte-Carlo integration schemes.
   For directions please consult the \texttt{README.md} file.
 
 \section{Results}
-The following results are obtained using the algorithms outlined above:
-\begin{center}
-\begin{tabular}{ l | l l l l }
-  \hline
-  \textbf{Method} & \textbf{Value} & \textbf{Accuracy} & \textbf{Sample Count} & \textbf{Runtime} \\
-  \hline
-  Trapezoidal & $0.4976609222761679$ & $6.306742604267335\times10^{-7}$ & $257$ & negligible \\
-  Simpson & $0.49766113237260257$ & $2.05317862711496\times10^{-9}$ & $129$ & negligible \\
-  \hline
-  Flat IS & $0.49749275093080847$ & $0.0009987888600436882$ & $606208$ & $17.8$ms \\
-  \hline
-\end{tabular}
-\end{center}
+  To compute values for equation \ref{eq:target}, we use the algorithms outlined in section \ref{sec:algo}.
+  For the quadrature methods we consider the process converged for a reported accuracy $\epsilon \le 10^{-6}$.
 
-- present results
+  Further, we consider \is{} methods using two separate proposal functions: a uniform distribution with
+  support $[a,b] = [0,2]$ and a slanted distribution of the form $\gamma(\alpha x + \beta)$ with $\alpha = -0.48$,
+  $\beta = 0.98$, and $\gamma$ set to the appropriate scaling factor for a support $[a,b]$.
 
-- mention that $10^{-6}$ is impossible with MC, report average time for 1 function evaluation given
-  full process parallelization and use this to calculate the order of magnitude of time taken to
-  get to $10^{-6}$, also mention that this will be much more favorable for higher-dimensional integrals
+  For the \apis{} method, we consider $f(x) = 1$ with support $[a,b]$ and $\pi(x) = |\Psi(x)|^2$.
+
+  The resulting values for the integral are given in figure \ref{fig:results}. All the computed values
+  are in agreement with each other and the most accurate value computed gives \final.
+
+  Note that the accuracies on the values obtained from \is{} algorithms is much lower than for quadrature
+  methods and requires significantly more samples to compute. This is due to the asymptotic behavior of
+  the error as $\frac{1}{N^4}$ (Simpson) and $\frac{1}{\sqrt{N}}$ (\is). For higher dimensional integrals,
+  the error on quadrature methods scales like $\frac{1}{N^{\frac4D}}$ (Simpson). Starting from $D=8$, we have
+  better asymptotic errors for \is{} methods. Since our problem is $D=1$ quadrature methods are
+  the far superior choice as seen in the results.
+
+  The project outline asked to compute the value of $I$ to an accuracy of $\epsilon \le 10^{-6}$ for
+  both quadrature and Monte-Carlo methods. As can be seen in the table below, we have not obtained
+  any results from \is{} or other Monte-Carlo methods that has a $2\sigma$ confidence interval matching
+  this accuracy. Our implementation takes around $25-30$ns per sample. This means that to achieve an
+  accuracy of $\epsilon \le 10^{-6}$ we would need to run our algorithm for about $6-7$ hours\footnotemark.
+
+  \footnotetext{
+    Since the computations are completely independent, we could cut this down by using multiple computers
+    simultaneously.
+  }
+
+  \begin{figure}[ht]
+  \centering
+  \begin{tabular}{ l | l l l l }
+    \textbf{Method} & \textbf{Value} & \textbf{Accuracy (reported)} & \textbf{Sample Count} & \textbf{Runtime} \\
+    \hline
+    Trapezoidal & $0.4976609222761679$ & $6.306742604267335\times10^{-7}$ & $257$ & negligible \\
+    Simpson & $0.49766113237260257$ & $2.05317862711496\times10^{-9}$ & $129$ & negligible \\
+
+    Uniform \is & $0.49749275093080847$ & $0.0009987888600436882$ & $606208$ & $17.8$ms \\
+    Uniform \is & $0.4976236307864889$ & $9.9988154790576\times10^{-05}$ & $60522496$ & $1.62$s \\
+    Uniform \is & $0.497647454893018$ & $7.778787976918824\times10^{-05}$ & $99991552$ & $2.49$s \\
+
+    Slanted \is & $0.498257793433617$ & $0.0009384751322811317$ & $81920$ & $2.59$ms \\
+    Slanted \is & $0.4977119148814941$ & $9.99393644049716\times10^{-05}$ & $7274496$ & $212.29$ms \\
+    Slanted \is & $0.49765521455387013$ & $2.6955438000222285\times10^{-05}$ & $99991552$ & $2.89$s \\
+
+    \apis{} & $0.4996739724614837$ & $0.00538124$ (see footnote\footnotemark) & $4096$ & negligible \\
+  \end{tabular}
+  \caption{
+    Results for different algorithms. All results agree with each other within their quoted accuracy.
+    From these, we obtain a final value of \final. This value is obtained from
+    the Simpson integration rule.
+  }
+  \label{fig:results}
+  \end{figure}
+
+  \footnotetext{
+    This value is based on the reported estimate for $Z \approx \bar Z = 1.0053812358940526$. Since
+    we know that $\pi = |\Psi|^2$ is normalized, we use $\epsilon = |Z-\bar Z|$.
+  }
 
 \section{Verification of Results}
+\label{sec:verify}
 
-- show that integrand is smooth (possibly even Lipschitz), and proof/ explain why this leads to
-  correct results in integral from quadrature method
-  - analyze numeric error under perfect arithmetic for our integrand
+% Consider:
+% - analyze numeric properties of quadrature method used and estimate numeric error incurred
+% - analyze numeric stability of monte-carlo method used
 
-- analyze numeric properties of quadrature method used and estimate numeric error incurred
+  All values reported in figure \ref{fig:results} agree with each other to within the quoted accuracy.
+  Further, using unit-testing it was established that the algorithms outlined in section \ref{sec:algo}
+  are implemented correctly. It can also be noted, that the integrand is a symmetric probability distribution
+  which decays fairly quickly as $x$ increases. A value $I$ near $\frac12$ is thus plausible. Further,
+  specific reasons the methods should converge with the given integral will be explored and the
+  convergence rates of the algorithms will be compared with what is expected theoretically.
 
-- analyze numeric stability of monte-carlo method used
+  \subsection{Quadrature Methods}
+  As we saw in section \ref{sec:algo}, the Trapezoidal and Simpson's method have errors
+  $\mathcal{O}\left( \frac{1}{N^2} \right)$ and $\mathcal{O}\left( \frac{1}{N^4} \right)$ respectively.
 
-- outline variance on integral supplied and explain that we use a two-sigma error range to
-  and how we expect that to behave
+  This analysis was true for analytic functions and as $|\Psi|$ is analytic, this analysis is valid
+  for our results as well. Further, it can be shown that $|\Psi|$ is also Lipschitz, which for analytic
+  functions means the derivative is bounded. Thus we may expect excellent convergence from our
+  quadrature schemes, which can be thought of as finite difference schemes.
 
-- compare results of different algorithms + show they agree
-- have graphs of how integral values change w/ iterations
-  - including errors for monte-carlo code
-  - include theoretical "bounds", starting from the converged value
+  Considering the errors reported by our algorithm, we can see that they follow the expected asymptotic
+  behavior very closely. This is shown in figures \ref{fig:trap} and \ref{fig:simp}.
+
+  % Plots Quadrature
+  \plot{proj-trap-accuracy}{
+    Values obtained for the Trapezoidal method plotted against the number function evaluations required. The red
+    error-bar graph shows the value computed for each step and the associated error, the green line
+    shows the final converged value. The theoretical error bounds are shown in yellow. The reported errors
+    follow the theoretical behavior very closely and all estimated lie within the theoretically expected range.
+  }{fig:trap}
+
+  \plot{proj-simp-accuracy}{
+    Values obtained for the Simpson method plotted against the number function evaluations required. The red
+    error-bar graph shows the value computed for each step and the associated error, the green line
+    shows the final converged value. The theoretical error bounds are shown in yellow. The reported errors
+    follow the theoretical behavior very closely and all estimated lie within the theoretically expected range.
+  }{fig:simp}
+
+  \subsection{Monte-Carlo Methods}
+  As the integral $I$ is well-defined, we expect the expected value to converge. Further, as per our
+  analysis in section \ref{sec:algo}, we expect the error on our estimate to behave like
+  $\mathcal{O}\left( \frac{\operatorname{var}(\frac fp)}{\sqrt N} \right)$.
+
+  It can further be noted that choosing $p$ to be more similar to $f$, in the sense of choosing $p$
+  such that $\frac fp$ is bounded by the smallest possible interval, we decrease the variance and thus
+  improve the error on our estimate by a constant factor.
+
+  This theoretically expected behavior can clearly be seen in figures \ref{fig:mont-flat} and
+  \ref{fig:mont-slant}.
+
+  % Plots Monte-Carlo
+  \plot{proj-mont-flat-accuracy}{
+    Values obtained for the \is{} method (uniform proposal distribution) plotted against the number
+    function evaluations required. The red
+    error-bar graph shows the value computed for each step and the associated error, the green line
+    shows the final converged value. The theoretical error bounds are shown in yellow. The reported errors
+    follow the theoretical behavior very closely and all estimated lie within the theoretically expected range.
+    All reported errors correspond to a $2\sigma$ confidence interval.
+  }{fig:mont-flat}
+
+  \plot{proj-mont-slanted-accuracy}{
+    Values obtained for the \is{} method (slanted proposal distribution) plotted against the number
+    function evaluations required. The red
+    error-bar graph shows the value computed for each step and the associated error, the green line
+    shows the final converged value. The theoretical error bounds are shown in yellow. The reported errors
+    follow the theoretical behavior very closely and all estimated lie within the theoretically expected range.
+    All reported errors correspond to a $2\sigma$ confidence interval. This graph nicely demonstrates the
+    effect of choosing a proposal more similar to the integrand: compared with figure \ref{fig:mont-flat},
+    the error bounds favorably scale by a constant factor.
+  }{fig:mont-slant}
 
 \bibliography{assignment.bib}{}
 \bibliographystyle{plain}
@@ -379,9 +470,9 @@ From tables we obtain
 \begin{equation}
 I = \frac{\operatorname{erf}(2)}{2} = 0.49766113250947636708 \dots,
 \end{equation}
-where $\operatorname{erf}(x) = \frac{1}{\sqrt\pi}\int_{-x}^x e^{-t^2} dt$ is the Error function.
-
-TODO: Compare result with tabulated values here ...
+where $\operatorname{erf}(x) = \frac{1}{\sqrt\pi}\int_{-x}^x e^{-t^2} dt$ is the Error function. Comparing
+this to the obtained result of \final, we see that we exactly match the tabulated value to within our
+quoted error, as expected based on the analysis in section \ref{sec:verify}.
 
 \section{Permuted Linear Congruential Random Number Generators}
 \label{app:pcg}
