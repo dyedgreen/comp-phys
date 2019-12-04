@@ -45,6 +45,7 @@ A comparison of our results with the tabulated values for this integral can be f
 \ref{app:cheat}.
 
 \section{Algorithms}
+\label{sec:algo}
 We will explore two general classes of algorithms: deterministic quadrature methods, and probabilistic
 Monte-Carlo integration schemes.
 
@@ -220,7 +221,7 @@ Monte-Carlo integration schemes.
 
   \footnotetext{A quick calculation reveals that to attain an accuracy of $\sigma = 10^{-5}$ we would
   require about $10^{10}$ samples. Using 64 bit floating point numbers to store the results, this would
-  require about $600$ GB of storage.}
+  require about $600$ GB of storage or $60\%$ of my computers total storage capacity.}
 
   To compute numerically stable online estimates of the expectation and variance, we utilize the
   following recursive formulae
@@ -236,7 +237,7 @@ Monte-Carlo integration schemes.
 
   When combining these estimates, we accumulate a global total estimate, which we successively combine
   with the individual online estimates as they become available. To combine two estimates, computed
-  from the two sets $X_A$ and $X_B$ both containing \iid{} samples of $x$, we use the relations\cite{chan}
+  from the two sets $X_A$ and $X_B$ both containing \iid{} samples of $x$, we use the following relations\cite{chan}:
   \begin{equation}
   \begin{split}
   \delta & = \bar{x}_B - \bar{x}_A \\
@@ -246,8 +247,8 @@ Monte-Carlo integration schemes.
   \end{equation}
 
   It should be noted that this is numerically unstable in the case when $N_A \approx N_B$ and both
-  are large\cite{chan}. However, we do not encounter this case, as the batches are generally small and so initially,
-  we have $N_B = N_A$, but both are small, while later we have $N_A \gg N_B$.
+  are large\cite{chan}. However, we do not encounter this case. as the batches are generally small.
+  Thus initially, we have $N_B = N_A$, but both are small, while later we have $N_A \gg N_B$.
 
   Note that the algorithm implemented in \texttt{/pkg/casino} does only compute the expectation of a
   statistic $x$. The importance sampling, which is trivial to implement given a means of computing
@@ -255,23 +256,93 @@ Monte-Carlo integration schemes.
   expectation calculation to refine $\mathbb{E}\left[ \frac{f(x)}{p(x)} \right]$ until the desired
   accuracy is reached\footnote{Or the sample limit is exceeded.}.
 
-  % TODO - Explain the implementation of expected value (and online mean, variance)
-  % TODO - explain random number generator used + reference paper
-  % TODO - explain set of random seeds used and where they originate from
-  % TODO - mention parallel runtime implementation
+  It should also be mentioned, that the choice of proposal function is a very important factor in
+  obtaining a small variance on the final result. We could try to sample from a distribution which
+  makes $\frac{f(x)}{p(x)} = constant$, such that we have
+  $\operatorname{var}\left(\frac{f(x)}{p(x)}\right) = 0$, but then we would need to use a rejection
+  based sampling algorithm\footnotemark. This would then increase the amount of entropy needed for our result,
+  as well as decreasing any computational gains through the need of repeated sampling. Thus, the implemented
+  algorithm only utilizes transformation based sampling methods.
 
-  % TODO - explain that we use rejection and how it's a trade of from using transformation method
+  \footnotetext{Or know the integral already, which would allow us to to transformation based sampling.}
+
+  % DONE - Explain the implementation of expected value (and online mean, variance)
+  % DONE - explain random number generator used + reference paper
+  % DONE - explain set of random seeds used and where they originate from
+  % DONE - mention parallel runtime implementation
+
+  % DONE - explain that we use rejection and how it's a trade of from using transformation method
   %        - less entropy, less sampling; but worse variance 
 
   \subsubsection{Adaptive Population Importance Sampling}
-  explain the \apis{} algorithm briefly, and reference paper
+  The \apis{} algorithm is an generic algorithm for performing adaptive importance sampling. The goal
+  of this general class of algorithms is to adapt the proposal distribution used for computation, in
+  order to improve the convergence rate.
+
+  Here, we use \apis{} as an example of this more general class of algorithms. It should be noted, that
+  the variety of \apis{} we implement utilizes a family of Gaussian proposal functions, which means that
+  we effectively have to reject many samples, leading to sub-par performance on our specific problem.
+  However, the algorithm nicely illustrates the principle behind adaptive sampling techniques.
+
+  The basic idea behind \apis{} is to perform standard importance sampling, for a number of epochs.
+  Then utilize a statistic that we estimated alongside the importance sampling process to adapt
+  the family of proposal distributions to better resemble the target distribution\cite{apis}.
+
+  Specifically, we try to evaluate
+  \begin{equation}
+  I = \frac{1}{Z} \int_\chi f(\vec{x}) \pi(\vec{x}) d\vec{x},
+  \end{equation}
+  where $Z = \int_\chi \pi(\vec{x}) d\vec{x}$ is the partition function.
+
+  We start by randomly (or otherwise) initializing a set of proposal distributions $q_i^{(t=0)}$.
+  For these proposal distributions we require that they are parameterized by their expected value\cite{apis}.
+  The reason for only adapting the first order moments of the proposal distributions is that this is
+  more stable than also adapting higher order moments\cite{apis}.
+
+  Then, for every epoch $t$ we draw one sample $\vec{x}_i \sim q_i^{(t)}(\vec{x})$ from each
+  of our proposal functions. These samples are then used to estimate $I$, $Z$, and $\mu_i$, the first
+  order moments of the proposal distributions under $\pi$.
+
+  After $n$ epochs, we update the proposal distributions $q_i^{(t)}$, using the estimate for $\mu_i$.
+  We then repeat this procedure until convergence.
+
+  This algorithm is implemented in \texttt{/pkg/casino}. For more details on the algorithm and the
+  precise method of computing the estimates, see\cite{apis}.
 
 \section{Ensuring Implementation Correctness}
+  The source code for this project encompasses more than $3000$ lines of code. We want to ensure that
+  this code implements the algorithms outlined in section \ref{sec:algo} correctly. Notice that this is separate
+  from verifying the specific results, as even when all algorithms are implemented correctly we may
+  still fail to converge to a correct result for a number of reasons\cite{nr}.
 
-- explain unit tests
-- outline tests run and test coverage
+  To ensure implementation correctness, we utilize a large number of unit tests. When implementing these
+  tests, we generally aim to achieve $\ge 70\%$ total coverage\footnote{Although we take the liberty
+  to omit tests for some trivial parts of the code base}. By maintaining an extensive suite of tests,
+  we can also confidently re-factor our source code during the development process and get immediate
+  feedback if obvious mistakes are made.
+
+  We test the expectation and integral routines using the same general approach: knowing the analytic
+  results for some integral or expected value and variance, we run our routines to compute estimates
+  of these values. We can then verify, that the integral values and accuracies reported match the
+  analytic results.
+
+  The markers are invited to run these tests and inspect the line-by-line test coverage themselves.
+  For directions please consult the \texttt{README.md} file.
 
 \section{Results}
+The following results are obtained using the algorithms outlined above:
+\begin{center}
+\begin{tabular}{ l | l l l l }
+  \hline
+  \textbf{Method} & \textbf{Value} & \textbf{Accuracy} & \textbf{Sample Count} & \textbf{Runtime} \\
+  \hline
+  Trapezoidal & $0.4976609222761679$ & $6.306742604267335\times10^{-7}$ & $257$ & negligible \\
+  Simpson & $0.49766113237260257$ & $2.05317862711496\times10^{-9}$ & $129$ & negligible \\
+  \hline
+  Flat IS & $0.49749275093080847$ & $0.0009987888600436882$ & $606208$ & $17.8$ms \\
+  \hline
+\end{tabular}
+\end{center}
 
 - present results
 

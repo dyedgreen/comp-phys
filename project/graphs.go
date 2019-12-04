@@ -11,8 +11,8 @@ import (
 	"gonum.org/v1/plot/plotutil"
 	"gonum.org/v1/plot/vg"
 
-	"github.com/dyedgreen/comp-phys/pkg/quad"
 	"github.com/dyedgreen/comp-phys/pkg/casino"
+	"github.com/dyedgreen/comp-phys/pkg/quad"
 )
 
 var fileType *string = flag.String("format", "png", "set type for saving plotted images")

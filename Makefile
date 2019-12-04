@@ -33,6 +33,10 @@ project-run:
 project-graphs: project
 project-graphs:
 	cd ./project && ./main -graph -format pdf
+	cp ./project/trap-accuracy.pdf ./pdf/images/proj-trap-accuracy.pdf
+	cp ./project/simp-accuracy.pdf ./pdf/images/proj-simp-accuracy.pdf
+	cp ./project/mont-flat-accuracy.pdf ./pdf/images/proj-mont-flat-accuracy.pdf
+	cp ./project/mont-slanted-accuracy.pdf ./pdf/images/proj-mont-slanted-accuracy.pdf
 
 # Build assignment binaries
 $(ASSIGNMENTS):
