@@ -18,12 +18,12 @@ func genData() {
 	simp := quad.NewSimpsonIntegral(8)
 	simp.Accuracy(&eps)
 
-	P1, err := quad.Integrate(wave_fn_2, 0, 2, trap)
+	P1, err := quad.Integrate(wave_fn_2, A, B, trap)
 	if err != nil {
 		panic(err)
 	}
 
-	P2, err := quad.Integrate(wave_fn_2, 0, 2, simp)
+	P2, err := quad.Integrate(wave_fn_2, A, B, simp)
 	if err != nil {
 		panic(err)
 	}
@@ -38,7 +38,7 @@ func genData() {
 	accs := []float64{1e-3, 1e-4, 1e-5, 1e-6}
 
 	montFlat := quad.NewUniformMonteCarloIntegral(128, 128, casino.Noise(64))
-	dist, err := casino.NewLinearDist(0, 2, -0.48, 0.98)
+	dist, err := casino.NewLinearDist(A, 2, -0.48, 0.98)
 	if err != nil {
 		panic(err)
 	}
@@ -49,7 +49,7 @@ func genData() {
 		montFlat.Accuracy(&acc)
 
 		start := time.Now()
-		P, err := quad.Integrate(wave_fn_2, 0, 2, montFlat)
+		P, err := quad.Integrate(wave_fn_2, A, B, montFlat)
 		elapsed := time.Now().Sub(start)
 
 		fmt.Printf("For accuracy %v:\n        P = %v\n", acc, P)
@@ -70,7 +70,7 @@ func genData() {
 		montSlanted.Accuracy(&acc)
 
 		start := time.Now()
-		P, err := quad.Integrate(wave_fn_2, 0, 2, montSlanted)
+		P, err := quad.Integrate(wave_fn_2, A, B, montSlanted)
 		elapsed := time.Now().Sub(start)
 
 		fmt.Printf("For accuracy %v:\n        P = %v\n", acc, P)
@@ -91,7 +91,7 @@ func genData() {
 	apis := casino.APIS{
 		Function: func(x float64) float64 {
 			// This is the finite support we're integrating over
-			if x < 0 || x > 2 {
+			if x < A || x > B {
 				return 0
 			}
 			return 1

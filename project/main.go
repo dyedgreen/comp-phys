@@ -5,6 +5,9 @@ import (
 	"math"
 )
 
+const A = 0
+const B = 2
+
 // Function supplied in problem
 func wave_fn_2(z float64) float64 {
 	// This is |Psi(z)|^2
