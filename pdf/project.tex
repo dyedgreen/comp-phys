@@ -30,50 +30,45 @@
 \maketitle
 
 \section{Introduction}
-In this report we investigate methods for numerically computing the value of a proper integral.
-The integral under scrutiny is
+In this report we investigate methods for numerically computing the value of
 
 \begin{equation}
 \label{eq:target}
 I = \int_a^b |\Psi(x)|^2 dx = \int_a^b \frac{1}{\sqrt{\pi}} e^{-x^2} dx,
 \end{equation}
-where we are interested in the case $a = 0$ and $b = 2$.
+where we are interested in the case $a = 0$, $b = 2$.
 
-This is, of course, a normalized Gaussian probability density, for which
-very accurate approximations and tabulated values exist. However, for the purposes of this report, we shall
-treat the value of the integral $I$ as unknown and investigate how to justify our confidence in the
-obtained numerical results.
+$|\Psi(x)|^2$ is a normalized Gaussian probability density for which
+very accurate approximations and tabulated values exist. However, for the purposes of this report we
+treat the value of $I$ as unknown and investigate how to justify confidence in the
+obtained results.
 
-A comparison of our results with the tabulated values for this integral can be found in appendix
-\ref{app:cheat}.
+A direct comparison with tabulated values can be found in appendix \ref{app:cheat}.
 
 \section{Algorithms}
 \label{sec:algo}
-We will explore two general classes of algorithms: deterministic quadrature methods, and probabilistic
-Monte-Carlo integration schemes.
+We explore two general classes of algorithms: quadrature methods, and Monte-Carlo integration.
 
 \subsection{Quadrature Methods}
   \subsubsection{Trapezoidal Rule}
   \label{sec:trap}
-  First, we will consider the trapezoidal quadrature method. Here, we approximate the integrand $f(x)$
-  as a linear function between the two step points, going through $f(x)$ in both points.
-
-  Then, if the function $f$ is analytic, we have $f(x) = f_0 + f_1 (x-x_0) + \mathcal{O}((x-x_0)^2)$\footnotemark
-  and thus
+  Consider approximating the integrand $f(x)$ as a linear function going through $f(a)$, $f(b)$.
+  Then, if $f$ is analytic, we have $f(x) = f_0 + f_0^\prime (x-x_0) + \mathcal{O}\left((x-x_0)^2\right)$
+  and thus\footnotemark
   \begin{equation}
-  \int_a^b f(x) dx \approx
-  \int_a^b f(x) + \frac{f(b) - f(a)}{b-a} (x-a) + \mathcal{O}(x^2) dx =
+  \int_a^b f(x) dx =
+  \int_a^b f(x_0) + \frac{f(b) - f(a)}{b-a} (x-a) + \mathcal{O}(x^2) dx =
   \frac{1}{2} h (f(a) + f(b)) + \mathcal{O}(h^3),
   \end{equation}
   where $h = b-a$ and $x_0 \in [a,b]$.
 
   \footnotetext{
-    This follows, as for analytic functions $\forall a, b \exists x_0 \in [a, b]$ s.t.
+    For analytic functions: $\forall a, b \in \mathbb{R} \exists x_0 \in [a, b]$ s.t.
     $f^\prime(x_0) = \frac{f(b)-f(a)}{b-a}$.
   }
 
-  Now if we wish to compute the integral over a long range $[a, b]$, we may extend the rule by dividing
-  the integration region into $N$ sub-integrals so that
+  To compute the integral over a longer range we extend the rule by dividing the integration
+  region into $N$ parts such that
   \begin{equation}
   \begin{split}
   I = \int_a^b f(x) dx & = \sum_{i=0}^{N-1} \int_{a+ih}^{a+(i+1)h} f(x) dx \\
@@ -83,9 +78,10 @@ Monte-Carlo integration schemes.
   \end{equation}
   where $h = \frac{b-a}{N}$.
 
-  Notice that in this case, given a desired accuracy $\epsilon$, we expect that $N \sim \frac{b-a}{\sqrt{\epsilon}}$,
-  function evaluations should be necessary to determine the function at the desired accuracy, presuming
-  arbitrarily precise arithmetic.
+  Notice that given a desired accuracy $\epsilon$ in general $N \sim \frac{b-a}{\sqrt{\epsilon}}$
+  function evaluations are necessary to determine the integral.
+
+  % TODO: --- REVISE FROM HERE ---
 
   This can be implemented algorithmically, where we require $\mathcal{O}(N)$ time and $\mathcal{O}(1)$,
   space. However, making use of the strong support for parallel computing in modern CPUs and the Go
@@ -471,7 +467,7 @@ From tables we obtain
 I = \frac{\operatorname{erf}(2)}{2} = 0.49766113250947636708 \dots,
 \end{equation}
 where $\operatorname{erf}(x) = \frac{1}{\sqrt\pi}\int_{-x}^x e^{-t^2} dt$ is the Error function. Comparing
-this to the obtained result of \final, we see that we exactly match the tabulated value to within our
+this to the our result \final one sees that the tabulated value is matched to within our
 quoted error, as expected based on the analysis in section \ref{sec:verify}.
 
 \section{Permuted Linear Congruential Random Number Generators}
