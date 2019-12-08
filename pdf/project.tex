@@ -81,60 +81,52 @@ We explore two general classes of algorithms: quadrature methods, and Monte-Carl
   Notice that given a desired accuracy $\epsilon$ in general $N \sim \frac{b-a}{\sqrt{\epsilon}}$
   function evaluations are necessary to determine the integral.
 
-  % TODO: --- REVISE FROM HERE ---
-
-  This can be implemented algorithmically, where we require $\mathcal{O}(N)$ time and $\mathcal{O}(1)$,
-  space. However, making use of the strong support for parallel computing in modern CPUs and the Go
-  programming language, we can reduce the time complexity of this algorithm by a factor of $M$, where $M$
-  is the number of processes we can run concurrently\footnotemark.
+  Implementing this scheme requires $\mathcal{O}(N)$ time and $\mathcal{O}(1)$ space. However, making
+  use of the strong support for parallel computing in modern CPUs and the Go programming language allows
+  us to reduce the time complexity by a factor of $M$, where $M$ is the number of threads
+  running concurrently\footnotemark.
 
   \footnotetext{This is true, since $M$ is limited by the number of cores in our processing unit. Given
-  a theoretically infinite amount of truly concurrent processes, we would want to choose a scheme that
-  combines two numbers at a time, leading to $\log_2(N)$ threads. It is clear that for any interesting
-  use case this is limited by the number of processing cores available.}
+  a theoretically infinite amount of truly concurrent threads we would want to choose a scheme that
+  combines two numbers at a time, leading to $\log_2(N)$ threads and time complexity. It is clear
+  that for any interesting integral this is limited by the number of processing cores available.}
 
-  Further, we implement a scheme which progressively increases the number of steps taken until the
-  approximation to the integral reaches a desired accuracy. This is achieved by sub-dividing
-  the integration region, adding points half-way between the existing samples for every step \cite{nr}.
-
-  Under this scheme, the integral can be computed as
+  Further, we can implement a scheme to progressively increases the number of integration steps until
+  a desired accuracy is reached. A straight-forward way to achieve this is to add mid-way points
+  between the samples taken with every iteration:
   \begin{equation}
   \label{eq:trap-rec}
-  I_m = \frac{I_m}{2} + \sum_i h_m f(x^{(m)}_i),
+  I_m = \frac{I_{m-1}}{2} + \sum_i h_m f(x^{(m)}_i),
   \end{equation}
-  where $m$ denotes the refinement step, $I_0 = \frac{h_0 (f(a) + f(b))}{2}$, $h_0 = b-a$,
+  where $m$ denotes the refinement step, $I_0 = h_0\frac{f(a) + f(b)}{2}$, $h_0 = b-a$,
   $h_m = \frac{h_{m-1}}{2}$, and $x^{(m)}_i$
-  range over the subdivisions at the $m^{\text{th}}$ refinement stage.
+  ranges over the subdivisions at the $m^{\text{th}}$ step.
 
-  A quick way to estimate the error after a given step, is to compute $\epsilon_m \approx |I_m - I_{m-1}|$
+  An efficient way to estimate the error after a given step, is to compute $\epsilon_m \approx |I_m - I_{m-1}|$
   \cite{nr}.
 
   This algorithm is implemented in \texttt{pkg/quad/trap.go}. The implementation parallelizes the computation
   of the summation in equation \ref{eq:trap-rec}, which is implemented in \texttt{pkg/quad/trap\_step.go}.
-  The \texttt{quad} package defines a generic \texttt{Integral} interface, which can be used to integrate
-  a function, given a specific integration scheme. The constructor of the trapezoidal scheme permits the
-  user to specify the number of worker routines desired when computing the successive steps of the integral.
+  The \texttt{quad} package defines a generic \texttt{Integral} interface, which the algorithm implements.
 
-  The algorithm used to parallelize the steps is built on the assumption that computation of the integrand
-  $f(x)$ is in general non-trivial and the most expensive operation in the integration process. Thus, the
-  algorithm has a worst case runtime of $\mathcal{O}(N)$, and a best case runtime of $\mathcal{O}(\frac{N}{M})$.
+  The parallel algorithm computing the steps assumes that computing $f(x)$ is non-trivial, in the sense
+  that is takes longer to compute than adding the result to the integral total. Thus, the
+  algorithm has a worst case runtime of $\mathcal{O}(N)$, and best case runtime of $\mathcal{O}(\frac NM)$.
 
   \subsubsection{Simpson Rule}
-  This quadrature method is closely related to the Trapezoidal Rule\footnotemark. We consider the integrand
-  $f(x)$ to be approximated by a quadratic polynomial, passing through the function $f(x)$ at the points
-  $a$, $\frac{a+b}{2}$, and $b$.
+  This quadrature method is closely related to the Trapezoidal Rule\footnotemark. Consider
+  $f(x)$ to be approximated by a quadratic polynomial $q(x)$, such that $f(a) = q(a)$,
+  $f(\frac{a+b}{2}) = q(\frac{a+b}{2})$, and $f(b) = q(b)$.
 
   \footnotetext{Indeed, we may understand both as special cases of the Runge-Kutta scheme for integrating
   ordinary first order differential equations\cite{nr}.}
 
-  We can derive Simpson's rule by considering the following Ansatz:
+  Now take the following Ansatz:
   \begin{equation}
   \frac{1}{b-a} \int_a^b q(x) dx = \alpha q(a) + \beta q(\frac{a+b}{2}) + \gamma q(b),
   \end{equation}
-  where $q(x)$ is a quadratic polynomial. And then determining the coefficients $\alpha$, $\beta$, and $\gamma$
-  such that this holds for any $q(x)$. However, by choosing to evaluate $f(x)$ in the center of the interval,
-  we find that this equation can be satisfied not just for second order polynomials $q(x)$, but also
-  for all third order polynomials $q(x)$. Then:
+  We can determine the coefficients $\alpha$, $\beta$, and $\gamma$ such that this holds for any
+  quadratic function $q(x)$. Further, this will then hold for $q(x)$ being cubic as well. Thus
 
   \begin{equation}
   \begin{split}
@@ -142,131 +134,96 @@ We explore two general classes of algorithms: quadrature methods, and Monte-Carl
   &= h \left( \frac{1}{6} f(a) + \frac{4}{6} f(\frac{a+b}{2}) + \frac{1}{6} f(b) \right) + \mathcal{O}(h^5),
   \end{split}
   \end{equation}
-  where $h = b-a$, and we have used that $\alpha = \gamma = \frac{1}{6}$ and $\beta = \frac{4}{6}$.
+  where $h = b-a$ and we used that $\alpha = \gamma = \frac{1}{6}$ and $\beta = \frac{4}{6}$.
 
-  As before, we obtain a total error of $\mathcal{O}(h^4)$, when summing this rule over a range subdivided
-  into $N$ segments, with $h = \frac{b-a}{N}$.
+  As before, the total error is $\mathcal{O}(h^4)$ when summing this rule over $N$ segments, where
+  $h = \frac{b-a}{N}$.
 
-  It should be noted that when employing the refinement scheme outlined in section \ref{sec:trap},
-  one can obtain the following result\cite{nr}:
+  It should be noted that employing the refinement scheme outlined in section \ref{sec:trap} we
+  obtain\cite{nr}:
 
   \begin{equation}
   I_m^{\text{Simpson}} = \frac{4}{3} I_{m+1}^{\text{Trapezoidal}} - \frac{1}{3} I_m^{\text{Trapezoidal}}.
   \end{equation}
 
-  Using this fact, the Simpson integration scheme is implemented in \texttt{pkg/quad/simp.go}. It
-  reuses the function for computing trapezoidal integral approximations and thus directly benefits from
-  the parallelized algorithm implemented for the evaluation under the Trapezoidal scheme, outlined in
-  section \ref{sec:trap}.
+  This is implemented in \texttt{pkg/quad/simp.go}, reusing the function for computing steps of the
+  trapezoidal approximation.
 
 \subsection{Monte-Carlo Integration}
   \subsubsection{Importance Sampling}
-  We start by considering the integral
+  We start by considering
   \begin{equation}
   \int_a^b f(x) dx = \int_{a}^{b} \frac{f(x)}{p(x)} p(x) dx = \mathbb{E}_{\sim p(x)}\left[ \frac{f(x)}{p(x)} \right],
   \end{equation}
-  where $p(x)dx$ is a probability measure with support $[a, b]$ and $\mathbb{E}$ denotes the expected
-  value. We can see that we may compute any integral by determining the expected value
-  $\mathbb{E}\left[ \frac{f(x)}{p(x)} \right]$.
+  where $p(x)dx$ is a probability measure with support $[a, b]$ and $\mathbb{E}$ denotes the expectation.
+  Computing the integral reduces to determining $\mathbb{E}\left[ \frac{f(x)}{p(x)} \right]$.
 
-  In general, we can estimate the expected value of a variate $x$ as:
-
+  In general, an unbiased estimator for $\mathbb{E}\left[ x \right]$ is
   \begin{equation}
   \bar{x}_N = \frac{1}{N} \sum_{n=1}^N x_n,
   \end{equation}
-  with $x_n \sim p(x)$, as $\mathbb{E}[\bar{x}_N] = \mathbb{E}[x]$. Using the central limit theorem for
-  \iid{} samples we can also provide the variance on our estimate. Specifically, for \iid{} samples,
-  we have
+  with $x_n \sim p(x)$. Using the central limit theorem for \iid{} samples we can also provide the
+  variance of our estimate. Specifically
 
   \begin{equation}
   \label{eq:var}
   \operatorname{var}(\bar{x}_N) = \frac{\operatorname{var}(x)}{N}.
   \end{equation}
 
-  Of course we can also estimate the variance given the set of $N$ \iid{} samples $x_n \sim p(x)$
+  And given $N$ \iid{} samples the variance is estimated by
   \begin{equation}
   \bar{\sigma}_x^2 = \frac{1}{N-1} \sum_{n=1}^N (x_n - \bar{x}_N)^2,
   \end{equation}
-  where we used Bessel's Correction\cite{nr} to obtain an unbiased estimator for the variance such
-  that
-  \begin{equation}
-  \mathbb{E}\left[\bar{\sigma}_x^2\right] = \operatorname{var}(x).
-  \end{equation}
+  where we used Bessel's Correction\cite{nr} to obtain an unbiased estimator.
 
-  As can be seen in equation \ref{eq:var}, the error on our estimate scales as $\sim \frac{1}{\sqrt{N}}$.
-  Thus, we require to capture many random samples to achieve a good accuracy. Specifically, we would
-  like to parallelize sampling, as one \iid{} sample can be taken and processed independently from
-  all others. We also want to be able to interactively refine the estimate we have until we are
-  satisfied with the error on $\bar{x}_N$.
-
-  To this end, the algorithm implemented in \texttt{pkg/casino/expectation.go} does multiple things.
-  The current state of the computation is encapsulated in a structure called \texttt{Expectation}.
-  A consumer of this API can make consecutive calls to refine the estimates for $\bar{x}$ and
-  $\operatorname{var}(x)$, until they are satisfied.
-
-  Every for every refinement, the work load is split up into a specified number of runners, each of
-  which computes an equal amount of \iid{} samples. Every runner uses a separate random number generator.
-  These generators are reused in consecutive refinements and seeded once at initialization. The
-  generator used is \texttt{PCG XSL RR 128/64}, which is a 64 bit generator from the PCG family\cite{pcg}.
-  These generators are computationally cheap and light-weight, such that we can easily run a
-  separate generator for every worker. See appendix \ref{app:pcg} for more details.
-
-  To seed random number generators, the \texttt{casino} package provides a convenient list of random numbers
-  generated from atmospheric noise.
-
-  As we require to compute many samples, we are memory limited and need to utilize an online
-  algorithm\footnotemark. Further, we are splitting the work to run over multiple workers, meaning we
-  need to combine the expectation and variance estimates each worker produces.
+  From equation \ref{eq:var} the accuracy scales as $\sim \frac{1}{\sqrt{N}}$. Thus in general we will
+  require many samples to find a good estimate. This means we seek to parallelize the algorithm and need
+  to utilize an online estimator, as we will be memory-limited\footnotemark.
 
   \footnotetext{A quick calculation reveals that to attain an accuracy of $\sigma = 10^{-5}$ we would
   require about $10^{10}$ samples. Using 64 bit floating point numbers to store the results, this would
   require about $600$ GB of storage or $60\%$ of my computers total storage capacity.}
 
-  To compute numerically stable online estimates of the expectation and variance, we utilize the
-  following recursive formulae
+  A numerically stable online estimator for expectation and variance is given by
   \begin{equation}
   \bar{x}_n = \bar{x}_{n-1} + \frac{x_n - \bar{x}_{n-1}}{n}
   \end{equation}
   and
-
   \begin{equation}
   M_{2,n} = M_{2,n-1} + (x_n - \bar{x}_{n-1})(x_n - \bar{x}_n),
   \end{equation}
-  where $\bar{\sigma}_x^2 = \frac{1}{N-1} M_{2,n}$ is the unbiased variance estimate\cite{welford}.
+  where $\bar{\sigma}_x^2 = \frac{1}{N-1} M_{2,n}$\cite{welford}.
 
-  When combining these estimates, we accumulate a global total estimate, which we successively combine
-  with the individual online estimates as they become available. To combine two estimates, computed
-  from the two sets $X_A$ and $X_B$ both containing \iid{} samples of $x$, we use the following relations\cite{chan}:
+  Further, given two estimates computed from sets $X_A$, $X_B$ of \iid{} samples the combined
+  estimate is
   \begin{equation}
   \begin{split}
-  \delta & = \bar{x}_B - \bar{x}_A \\
-  \bar{x}_N & = \bar{x}_A + \delta \frac{N_B}{N} \\
-  M_{2,N} & = M_{2,A} + M_{2,B} + \delta^2 \frac{N_A N_B}{N}
+  \delta & = \bar{x}_B - \bar{x}_A, \\
+  \bar{x}_N & = \bar{x}_A + \delta \frac{N_B}{N}, \\
+  M_{2,N} & = M_{2,A} + M_{2,B} + \delta^2 \frac{N_A N_B}{N},
   \end{split}
   \end{equation}
+  with $N = N_A + N_B$\cite{chan}.
 
-  It should be noted that this is numerically unstable in the case when $N_A \approx N_B$ and both
-  are large\cite{chan}. However, we do not encounter this case. as the batches are generally small.
-  Thus initially, we have $N_B = N_A$, but both are small, while later we have $N_A \gg N_B$.
+  Note that this is numerically unstable for $N_A \approx N_B$ and both are large\cite{chan}. But as we
+  either have $N_A \approx N_B$ and both are small, or $N_A \gg N_B$ we do not encounter this case.
 
-  Note that the algorithm implemented in \texttt{/pkg/casino} does only compute the expectation of a
-  statistic $x$. The \is{}, which is trivial to implement given a means of computing
-  expected values and variances, is implemented by \texttt{/pkg/quad/mont.go}. It merely uses the
-  expectation calculation to refine $\mathbb{E}\left[ \frac{f(x)}{p(x)} \right]$ until the desired
-  accuracy is reached\footnote{Or the sample limit is exceeded.}.
+  This is implemented in the \texttt{casino} package. The algorithm provides a facility to interactively
+  refine an estimate using a number of concurrent workers. Each worker uses a separate \texttt{PCG XSL RR 128/64}
+  random number generator. This is possible as \texttt{PCG} is very light-weight and computationally cheap\cite{pcg}.
+  See appendix \ref{app:pcg} for more details.
 
-  The algorithm implementing the \is{} integration, reports the accuracy as
-  $2\frac{\bar\sigma_N}{\sqrt N}$.
+  Using the expectation estimate \texttt{/pkg/quad/mont.go} implements integration using \is{}. For
+  the \is{} integration we report the accuracy as $2\frac{\bar\sigma_N}{\sqrt N}$.
 
-  It should also be mentioned, that the choice of proposal function is a very important factor in
-  obtaining a small variance on the final result. We could try to sample from a distribution which
-  makes $\frac{f(x)}{p(x)} = constant$, such that we have
-  $\operatorname{var}\left(\frac{f(x)}{p(x)}\right) = 0$, but then we would need to use a rejection
-  based sampling algorithm\footnotemark. This would then increase the amount of entropy needed for our result,
-  as well as decreasing any computational gains through the need of repeated sampling. Thus, the implemented
-  algorithm only utilizes transformation based sampling methods.
+  The choice of proposal function is a very important factor in
+  obtaining a small variance. Using a proposal function $\frac{f(x)}{p(x)} = constant$, we get
+  $\operatorname{var}\left(\frac{f(x)}{p(x)}\right) = 0$. Unless we can integrate $p$\footnote{Which is
+  equivalent to integrating $f$.}, we would need to utilize rejection based sampling. This is effectively
+  equivalent to doing \is. Thus, we seek an integrable $p$ as close to $f$ as possible.
 
-  \footnotetext{Or know the integral already, which would allow us to to transformation based sampling.}
+  % GO OVER FROM HERE
+  --------------------------------------------------------------------------------------------------
 
   \subsubsection{Adaptive Population Importance Sampling}
   The \apis{} algorithm is an generic algorithm for performing adaptive \is{}. The goal
@@ -468,7 +425,7 @@ I = \frac{\operatorname{erf}(2)}{2} = 0.49766113250947636708 \dots,
 \end{equation}
 where $\operatorname{erf}(x) = \frac{1}{\sqrt\pi}\int_{-x}^x e^{-t^2} dt$ is the Error function. Comparing
 this to the our result \final one sees that the tabulated value is matched to within our
-quoted error, as expected based on the analysis in section \ref{sec:verify}.
+quoted error as expected based on the analysis in section \ref{sec:verify}.
 
 \section{Permuted Linear Congruential Random Number Generators}
 \label{app:pcg}
@@ -484,7 +441,7 @@ where $S_n$, $\alpha$, and $\beta$ are part of a modular group under addition an
 We may notice, that the quality of the random bits produced increases as we consider higher bits
 in the result\cite{pcg}. The idea of the PCG family of generators is to use this fact by
 applying families of permutations to a subset of the produced bits, where the permutation family
-members are selected `randomly' using the highest oder bits.
+members are selected `randomly' using the highest order bits.
 
 The \texttt{PCG XSL RR 128/64} generator we used applies a rotation on an XOR shifted part of the
 internal state, produces 64 bit random numbers, and uses 128 bits of internal state (giving a
