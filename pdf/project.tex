@@ -224,13 +224,10 @@ We explore two general classes of algorithms: quadrature methods, and Monte-Carl
   equivalent to integrating $f$.}, we would need to utilize rejection based sampling. This is effectively
   equivalent to doing \is. Thus, we seek an integrable $p$ as close to $f$ as possible.
 
-  % GO OVER FROM HERE
-  --------------------------------------------------------------------------------------------------
-
   \subsubsection{Adaptive Population Importance Sampling}
   The \apis{} algorithm is a generic algorithm for performing adaptive \is{}.
 
-  The strategy of this class of algorithms is to use the data gathered during sampling to improve
+  The strategy of this class of algorithm is to use the data gathered during sampling to improve
   the efficiency of the proposal distribution, i.e. to reduce what we called
   $\operatorname{var}\left(\frac fp\right)$ in section \ref{sec:mon-is}.
 
@@ -248,61 +245,37 @@ We explore two general classes of algorithms: quadrature methods, and Monte-Carl
     stable approach in general\cite{apis}.
   }
 
-  Initially $q_i$ are chosen at random, or based on some knowledge of the problem. Then, for a number
-  of iterations $T_a$ we perform \is{} to estimate $I$, $Z$, $\mu_i$. Then we use $\mu_i$ to update
-  $q_i$. This is then repeated until the desired convergence criterion is meet.
+  Initially $q_i^{(t=0)}$ are chosen at random, or based on some knowledge of the problem. Then, for a number
+  of iterations $T_a$ we perform \is{} to estimate $I$, $Z$, $\mu_i$ by drawing a one sample from each
+  proposal distribution per iteration. Then we use $\mu_i$ to update $q_i^{(t)}$. This is repeated
+  until the desired convergence criterion is meet. The estimates use online formulae very similar
+  to what was discussed in \ref{sec:mon-is}.
 
-  --------------------------------------------------------------------------------------------------
-
-  The goal
-  of this general class of algorithms is to adapt the proposal distribution used for computation, in
-  order to improve the convergence rate. Here, we use \apis{} as an example of this more general class
-  of algorithms.
-
-  The basic idea behind \apis{} is to perform standard \is{}, for a number of epochs.
-  Then utilize a statistic that we estimated alongside the \is{} process to adapt
-  the family of proposal distributions to better resemble the target distribution\cite{apis}.
-
-  Specifically, we try to evaluate
-  \begin{equation}
-  I = \frac{1}{Z} \int_\chi f(\vec{x}) \pi(\vec{x}) d\vec{x},
-  \end{equation}
-  where $Z = \int_\chi \pi(\vec{x}) d\vec{x}$ is the partition function.
-
-  We start by randomly (or otherwise) initializing a set of proposal distributions $q_i^{(t=0)}$.
-  For these proposal distributions we require that they are parameterized by their expected value\cite{apis}.
-  The reason for only adapting the first order moments of the proposal distributions is that this is
-  more stable than also adapting higher order moments\cite{apis}.
-
-  Then, for every epoch $t$ we draw one sample $\vec{x}_i \sim q_i^{(t)}(\vec{x})$ from each
-  of our proposal functions. These samples are then used to estimate $I$, $Z$, and $\mu_i$, the first
-  order moments of the proposal distributions under $\pi$.
-
-  After $n$ epochs, we update the proposal distributions $q_i^{(t)}$, using the estimate for $\mu_i$.
-  We then repeat this procedure until convergence.
-
-  This algorithm is implemented in \texttt{/pkg/casino}. For more details on the algorithm and the
-  precise method of computing the estimates, see\cite{apis}.
+  This algorithm is implemented in \texttt{/pkg/casino/apis.go} using families composed of Normal distributions.
+  For more details on the algorithm and the precise method of computing the estimates, see\cite{apis}.
 
 \section{Ensuring Implementation Correctness}
-  The source code for this project encompasses more than $3000$ lines of code. We want to ensure that
-  this code implements the algorithms outlined in section \ref{sec:algo} correctly. Notice that this is separate
-  from verifying the specific results, as even when all algorithms are implemented correctly we may
-  still fail to converge to a correct result for a number of reasons\cite{nr}.
+  The source code for this project encompasses more than $3500$ lines of code\footnotemark. To ensure
+  this code implements the algorithms in section \ref{sec:algo} correctly, we utilize unit-tests.
+  Notice that this is separate from verifying specific results. Even when all algorithms are
+  implemented correctly they may still fail to converge correctly for a number of reasons\cite{nr}.
 
-  To ensure implementation correctness, we utilize a large number of unit tests. When implementing these
-  tests, we generally aim to achieve $\ge 70\%$ total coverage\footnote{Although we take the liberty
-  to omit tests for some trivial parts of the code base}. By maintaining an extensive suite of tests,
-  we can also confidently re-factor our source code during the development process and get immediate
-  feedback if obvious mistakes are made.
+  \footnotetext{
+    As reported by \texttt{wc -l \$(find . -name "*.go")}.
+  }
 
-  We test the expectation and integral routines using the same general approach: knowing the analytic
-  results for some integral or expected value and variance, we run our routines to compute estimates
-  of these values. We can then verify, that the integral values and accuracies reported match the
+  Implementing these tests, we generally aim for $\ge 70\%$ coverage\footnote{Although
+  we take the liberty to omit tests for some trivial parts of the code base}. By maintaining an extensive
+  suite of tests we can also confidently re-factor code during the development process, getting immediate
+  feedback for obvious mistakes. Tests can be found in files named \texttt{*\_test.go}.
+
+  We test \texttt{casino} and \texttt{quad} routines using the same approach: knowing analytic
+  results for some integral or expected value and variance, we compute estimates
+  of these values. We then verify, that the integral values and accuracies reported are consistent with
   analytic results.
 
-  The markers are invited to run these tests and inspect the line-by-line test coverage themselves.
-  For directions please consult the \texttt{README.md} file.
+  The markers are invited to run tests and inspect the line-by-line test coverage themselves.
+  For directions consult the \texttt{README.md} file.
 
 \section{Results}
   To compute values for equation \ref{eq:target}, we use the algorithms outlined in section \ref{sec:algo}.
@@ -329,6 +302,8 @@ We explore two general classes of algorithms: quadrature methods, and Monte-Carl
   any results from \is{} or other Monte-Carlo methods that has a $2\sigma$ confidence interval matching
   this accuracy. Our implementation takes around $25-30$ns per sample. This means that to achieve an
   accuracy of $\epsilon \le 10^{-6}$ we would need to run our algorithm for about $6-7$ hours\footnotemark.
+
+  % mention apis is better, but implementation is not parallelized ...
 
   \footnotetext{
     Since the computations are completely independent, we could cut this down by using multiple computers

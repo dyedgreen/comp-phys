@@ -5,14 +5,15 @@
 To build and run the project, use `make` or `make project-run`. To only build the project binary,
 use `make project`.
 
-To build and run all assignment code with default data a simple `make assignment` should suffice. To
-generate the submitted reports run `make pdf` and to generate the submitted ZIP archive run `make zip`.
+To build and run all assignment code with default data a simple `make assignment` should suffice.
+
+To generate the submitted reports run `make pdf` and to generate the submitted ZIP archive run `make zip`.
 
 ## PNG and other Graph Formats
 
 There have been complaints about the graphs being generated as `.pdf` files. When running `make pdf`,
 the graphs are generated in `.pdf` format to produce a high-quality report document. If the marker
-wishes to inspect the graphs as some other format (e.g. `.png`), they are free to run `./main -graph`,
+wishes to inspect the graphs in some other format (e.g. `.png`), they are free to run `./main -graph`,
 in the `/project` directory. (Run `./main` to see available options and make sure to build the project
 first!)
 
