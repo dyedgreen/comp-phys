@@ -29,6 +29,8 @@
 \begin{document}
 \maketitle
 
+\abstract{TODO: Write abstract.}
+
 \section{Introduction}
 In this report we investigate methods for numerically computing the value of
 
@@ -255,6 +257,7 @@ We explore two general classes of algorithms: quadrature methods, and Monte-Carl
   For more details on the algorithm and the precise method of computing the estimates, see\cite{apis}.
 
 \section{Ensuring Implementation Correctness}
+  \label{sec:tests}
   The source code for this project encompasses more than $3500$ lines of code\footnotemark. To ensure
   this code implements the algorithms in section \ref{sec:algo} correctly, we utilize unit-tests.
   Notice that this is separate from verifying specific results. Even when all algorithms are
@@ -278,111 +281,112 @@ We explore two general classes of algorithms: quadrature methods, and Monte-Carl
   For directions consult the \texttt{README.md} file.
 
 \section{Results}
-  To compute values for equation \ref{eq:target}, we use the algorithms outlined in section \ref{sec:algo}.
-  For the quadrature methods we consider the process converged for a reported accuracy $\epsilon \le 10^{-6}$.
-
-  Further, we consider \is{} methods using two separate proposal functions: a uniform distribution with
-  support $[a,b] = [0,2]$ and a slanted distribution of the form $\gamma(\alpha x + \beta)$ with $\alpha = -0.48$,
-  $\beta = 0.98$, and $\gamma$ set to the appropriate scaling factor for a support $[a,b]$.
-
-  For the \apis{} method, we consider $f(x) = 1$ with support $[a,b]$ and $\pi(x) = |\Psi(x)|^2$.
+  To compute values for equation \ref{eq:target} we use the algorithms outlined in section \ref{sec:algo}.
+  Quadrature methods are considered converged at a reported accuracy $\epsilon \le 10^{-6}$.
+  For the \is{} schemes we progressively consider accuracies of $\epsilon \le 10^{-3},10^{-4},10^{-5},10^{-6}$.
+  We compare two different proposal functions: a uniform distribution with support $[a,b] = [0,2]$ and
+  a slanted distribution $\gamma(\alpha x + \beta)$ with $\alpha = -0.48$, $\beta = 0.98$, and
+  $\gamma$ set to the appropriate normalizing factor for support $[a,b]$.
+  For the \apis{} method we use $f(x) = 1$ with support $[a,b]$ and $\pi(x) = |\Psi(x)|^2$.
 
   The resulting values for the integral are given in figure \ref{fig:results}. All the computed values
-  are in agreement with each other and the most accurate value computed gives \final.
+  are in agreement and the most accurate result is \final.
 
-  Note that the accuracies on the values obtained from \is{} algorithms is much lower than for quadrature
-  methods and requires significantly more samples to compute. This is due to the asymptotic behavior of
-  the error as $\frac{1}{N^4}$ (Simpson) and $\frac{1}{\sqrt{N}}$ (\is). For higher dimensional integrals,
-  the error on quadrature methods scales like $\frac{1}{N^{\frac4D}}$ (Simpson). Starting from $D=8$, we have
-  better asymptotic errors for \is{} methods. Since our problem is $D=1$ quadrature methods are
-  the far superior choice as seen in the results.
+  Note that the accuracies obtained from \is{} are worse than for quadrature methods and require
+  significantly more samples. This is due to the asymptotic behavior of the error $\sim \frac{1}{N^4}$
+  (Simpson) and $\sim \frac{1}{\sqrt{N}}$ (\is). For higher dimensional integrals the error on quadrature
+  methods is $\sim \frac{1}{N^{\frac4D}}$ (Simpson). Starting from $D=8$ asymptotic errors for \is{}
+  are favorable. Our problem is $D=1$ so quadrature methods perform better as seen in figure \ref{fig:results}.
 
-  The project outline asked to compute the value of $I$ to an accuracy of $\epsilon \le 10^{-6}$ for
-  both quadrature and Monte-Carlo methods. As can be seen in the table below, we have not obtained
-  any results from \is{} or other Monte-Carlo methods that has a $2\sigma$ confidence interval matching
-  this accuracy. Our implementation takes around $25-30$ns per sample. This means that to achieve an
-  accuracy of $\epsilon \le 10^{-6}$ we would need to run our algorithm for about $6-7$ hours\footnotemark.
-
-  % mention apis is better, but implementation is not parallelized ...
+  The parallelized \is{} implementation takes around $25-30$ns per sample. To achieve $\epsilon \le 10^{-6}$
+  at $2\sigma$ confidence $\sim 10^{12}$ samples are required or about $\sim 6$ hours of runtime\footnotemark.
 
   \footnotetext{
-    Since the computations are completely independent, we could cut this down by using multiple computers
-    simultaneously.
+    Since the computations are completely independent, this could be cut this down by using multiple computers
+    simultaneously. But for that one would need multiple computers. Or Google Cloud Credits. Or both.
+    (Or credits with AWS, but I don't have those either.)
   }
+
+  \apis{} is more sample efficient than \is{}, but is not implemented as a parallel algorithm and
+  so has significantly longer run-time.
 
   \begin{figure}[ht]
   \centering
   \begin{tabular}{ l | l l l l }
     \textbf{Method} & \textbf{Value} & \textbf{Accuracy (reported)} & \textbf{Sample Count} & \textbf{Runtime} \\
     \hline
-    Trapezoidal & $0.4976609222761679$ & $6.306742604267335\times10^{-7}$ & $257$ & negligible \\
-    Simpson & $0.49766113237260257$ & $2.05317862711496\times10^{-9}$ & $129$ & negligible \\
 
-    Uniform \is & $0.49749275093080847$ & $0.0009987888600436882$ & $606208$ & $17.8$ms \\
-    Uniform \is & $0.4976236307864889$ & $9.9988154790576\times10^{-05}$ & $60522496$ & $1.62$s \\
-    Uniform \is & $0.497647454893018$ & $7.778787976918824\times10^{-05}$ & $99991552$ & $2.49$s \\
+    Trapezoidal & $0.4976609222761679$  & $6.306742604267335\times10^{-7}$       & $257$      & negligible \\
+    Simpson     & $0.49766113237260257$ & $2.05317862711496\times10^{-9}$        & $129$      & negligible \\
 
-    Slanted \is & $0.498257793433617$ & $0.0009384751322811317$ & $81920$ & $2.59$ms \\
-    Slanted \is & $0.4977119148814941$ & $9.99393644049716\times10^{-05}$ & $7274496$ & $212.29$ms \\
-    Slanted \is & $0.49765521455387013$ & $2.6955438000222285\times10^{-05}$ & $99991552$ & $2.89$s \\
+    Uniform \is & $0.49749275093080847$ & $0.0009987888600436882$                & $606208$   & $17.8$ms   \\
+    Uniform \is & $0.4976236307864889$  & $9.9988154790576\times10^{-05}$        & $60522496$ & $1.62$s    \\
+    Uniform \is & $0.497647454893018$   & $7.778787976918824\times10^{-05}$      & $99991552$ & $2.49$s    \\
 
-    \apis{} & $0.4975202501301652$ & $0.00021774502243365745$ (see footnote\footnotemark) & $606208$ & $18.14$s \\
+    Slanted \is & $0.498257793433617$   & $0.0009384751322811317$                & $81920$    & $2.59$ms   \\
+    Slanted \is & $0.4977119148814941$  & $9.99393644049716\times10^{-05}$       & $7274496$  & $212.29$ms \\
+    Slanted \is & $0.49765521455387013$ & $2.695543800022229\times10^{-05}$      & $99991552$ & $2.89$s    \\
+
+    \apis{}     & $0.4975202501301652$  & $0.00021774502243$ (see\footnotemark)  & $606208$   & $18.14$s   \\
+
   \end{tabular}
   \caption{
-    Results for different algorithms. All results agree with each other within their quoted accuracy.
-    From these, we obtain a final value of \final. This value is obtained from
-    the Simpson integration rule.
+    Results for different algorithms. All results agree to within the quoted accuracy.
+    From these, we obtain a final value of \final{} (Simpson result).
   }
   \label{fig:results}
   \end{figure}
 
   \footnotetext{
-    This value is based on the reported estimate for $Z \approx \bar Z = 1.0002177450224337$. Since
-    we know that $\pi = |\Psi|^2$ is normalized, we use $\epsilon = |Z-\bar Z|$.
+    This value is based on the estimate for $Z \approx \bar Z = 1.0002177450224337$. Since
+    $\pi = |\Psi|^2$ is normalized $\epsilon = |Z-\bar Z|$.
   }
 
-\section{Verification of Results}
+\section{Plausibility of Results}
 \label{sec:verify}
 
-% Consider:
-% - analyze numeric properties of quadrature method used and estimate numeric error incurred
-% - analyze numeric stability of monte-carlo method used
+  % Consider further:
+  % - analyze numeric properties of quadrature method used and estimate numeric error incurred
+  % - analyze numeric stability of monte-carlo method used
 
-  All values reported in figure \ref{fig:results} agree with each other to within the quoted accuracy.
-  Further, using unit-testing it was established that the algorithms outlined in section \ref{sec:algo}
-  are implemented correctly. It can also be noted, that the integrand is a symmetric probability distribution
-  which decays fairly quickly as $x$ increases. A value $I$ near $\frac12$ is thus plausible. Further,
-  specific reasons the methods should converge with the given integral will be explored and the
-  convergence rates of the algorithms will be compared with what is expected theoretically.
+  All values reported (figure \ref{fig:results}) agree to within the quoted accuracy. Further, unit
+  testing convinced us of the correctness of our implementation (section \ref{sec:tests}). We also note
+  that the integrand is a symmetric, normalized distribution which decays exponentially in $x$.
+  $I \approx \frac12$ is thus physically plausible.
 
   \subsection{Quadrature Methods}
-  As we saw in section \ref{sec:algo}, the Trapezoidal and Simpson's method have errors
+  As seen in section \ref{sec:algo}, the Trapezoidal and Simpson's method have errors
   $\mathcal{O}\left( \frac{1}{N^2} \right)$ and $\mathcal{O}\left( \frac{1}{N^4} \right)$ respectively.
 
-  This analysis was true for analytic functions and as $|\Psi|$ is analytic, this analysis is valid
-  for our results as well. Further, it can be shown that $|\Psi|$ is also Lipschitz, which for analytic
-  functions means the derivative is bounded. Thus we may expect excellent convergence from our
-  quadrature schemes, which can be thought of as finite difference schemes.
+  This was for analytic functions and as $|\Psi|^2$ is analytic this analysis is valid
+  for our results. Further one can show $|\Psi|^2$ is Lipschitz\footnote{For analytic functions this means
+  a bounded derivative.}. Thus we expect excellent convergence
+  from quadrature schemes which can be thought of as finite difference methods\footnote{They are special
+  cases of the Runge-Kutta scheme\cite{nr}.}.
 
-  Considering the errors reported by our algorithm, we can see that they follow the expected asymptotic
-  behavior very closely. This is shown in figures \ref{fig:trap} and \ref{fig:simp}.
+  This can also be seen in our reported errors, which follow the expected asymptotic behavior, shown in
+  figures \ref{fig:trap} and \ref{fig:simp}.
 
   % Plots Quadrature
   \plot{proj-trap-accuracy}{
     Values obtained for the Trapezoidal method plotted against the number function evaluations required. The red
     error-bar graph shows the value computed for each step and the associated error, the green line
     shows the final converged value. The theoretical error bounds are shown in yellow. The reported errors
-    follow the theoretical behavior very closely and all estimated lie within the theoretically expected range.
+    follow the theoretical behavior very closely and all estimates lie within the theoretically expected range.
   }{fig:trap}
 
   \plot{proj-simp-accuracy}{
     Values obtained for the Simpson method plotted against the number function evaluations required. The red
     error-bar graph shows the value computed for each step and the associated error, the green line
     shows the final converged value. The theoretical error bounds are shown in yellow. The reported errors
-    follow the theoretical behavior very closely and all estimated lie within the theoretically expected range.
+    follow the theoretical behavior very closely and all estimates lie within the theoretically expected range.
   }{fig:simp}
 
   \subsection{Monte-Carlo Methods}
+
+  % REVISE FROM HERE:
+  ------------------------------------------------------------------------------------------------------------------------
+
   As the integral $I$ is well-defined, we expect the expected value to converge. Further, as per our
   analysis in section \ref{sec:algo}, we expect the error on our estimate to behave like
   $\mathcal{O}\left( \frac{\operatorname{var}(\frac fp)}{\sqrt N} \right)$.
@@ -391,8 +395,7 @@ We explore two general classes of algorithms: quadrature methods, and Monte-Carl
   such that $\frac fp$ is bounded by the smallest possible interval, we decrease the variance and thus
   improve the error on our estimate by a constant factor.
 
-  This theoretically expected behavior can clearly be seen in figures \ref{fig:mont-flat} and
-  \ref{fig:mont-slant}.
+  This theoretically expected behavior can clearly be seen in figures \ref{fig:mont-flat}, \ref{fig:mont-slant}.
 
   % Plots Monte-Carlo
   \plot{proj-mont-flat-accuracy}{
@@ -400,7 +403,7 @@ We explore two general classes of algorithms: quadrature methods, and Monte-Carl
     function evaluations required. The red
     error-bar graph shows the value computed for each step and the associated error, the green line
     shows the final converged value. The theoretical error bounds are shown in yellow. The reported errors
-    follow the theoretical behavior very closely and all estimated lie within the theoretically expected range.
+    follow the theoretical behavior very closely and all estimates lie within the theoretically expected range.
     All reported errors correspond to a $2\sigma$ confidence interval.
   }{fig:mont-flat}
 
@@ -409,7 +412,7 @@ We explore two general classes of algorithms: quadrature methods, and Monte-Carl
     function evaluations required. The red
     error-bar graph shows the value computed for each step and the associated error, the green line
     shows the final converged value. The theoretical error bounds are shown in yellow. The reported errors
-    follow the theoretical behavior very closely and all estimated lie within the theoretically expected range.
+    follow the theoretical behavior very closely and all estimates lie within the theoretically expected range.
     All reported errors correspond to a $2\sigma$ confidence interval. This graph nicely demonstrates the
     effect of choosing a proposal more similar to the integrand: compared with figure \ref{fig:mont-flat},
     the error bounds favorably scale by a constant factor.

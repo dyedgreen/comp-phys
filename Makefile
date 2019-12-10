@@ -1,7 +1,7 @@
 # Some useful make targets
 
 ASSIGNMENTS = $(shell find ./assignment -name "q-*" -type d)
-ZIP_NAME = "Roeder-Tilman-CP2019-Project-Code.zip"
+ZIP_NAME = "Roeder_TG_Project2.zip"
 
 # Default target for happy markers
 all: project
