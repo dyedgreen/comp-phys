@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"time"
+	"math"
 
 	"github.com/dyedgreen/comp-phys/pkg/casino"
 	"github.com/dyedgreen/comp-phys/pkg/quad"
@@ -97,12 +98,17 @@ func genData() {
 			return 1
 		},
 		Pi:     wave_fn_2,
-		Epochs: 128, Iterations: 32,
+		Epochs: 18944, Iterations: 32, // total: 606208
 		Mus: mus, Sigmas: sigmas,
 		Seeds: casino.Noise(32),
 	}
 
 	fmt.Println("\n-- Monte Carlo Results (APIS) --\n")
+	start := time.Now()
 	P, Z := apis.Estimate()
-	fmt.Printf("        P = %v\n        Z = %v\n", P, Z)
+	elapsed := time.Now().Sub(start)
+	fmt.Printf("        P = %v\n        Z = %v\n accuracy = %v\n", P, Z, math.Abs(Z-1))
+	fmt.Printf("Time elapsed: %v (%v nanosecond/sample)\n",
+		elapsed,
+		float64(elapsed.Nanoseconds())/606208)
 }
