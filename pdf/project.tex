@@ -6,7 +6,7 @@
 \usepackage{graphicx}
 \usepackage{hyperref}
 \usepackage{cite}
-\usepackage{fullpage}
+\usepackage[margin=2cm]{geometry}
 
 \graphicspath{ {./images/} }
 
@@ -15,7 +15,7 @@
 \date{\today}
 
 % Uniform plots
-\newcommand{\plot}[3]{\begin{figure}[ht]\centering\includegraphics[width=10cm]{#1}\caption{#2}\label{#3}\end{figure}}
+\newcommand{\plot}[3]{\begin{figure}[htp]\centering\includegraphics[width=10cm]{#1}\caption{#2}\label{#3}\end{figure}}
 
 % Abbreviations
 \newcommand{\abbreviate}[3]{\newcommand{#1}{#3 \textit{(#2)}\renewcommand{#1}{#2}}}
@@ -28,8 +28,16 @@
 
 \begin{document}
 \maketitle
+\abstract{
+  Using quadrature and Monte-Carlo integration schemes it is determined that
+  $\int_0^2 \frac{1}{\sqrt{\pi}} e^{-x^2} dx \approx$ \final. We
+  find that for this one dimensional problem, quadrature methods
+  are favorable as they converge much more rapidly. For Monte-Carlo methods
+  we find that the efficiency of methods matches theoretical expectations.
 
-\abstract{TODO: Write abstract.}
+  Specifically, the convergence is $\sim \max(\frac fp)$ for Importance Sampling
+  and slightly improves using adaptive methods.
+}
 
 \section{Introduction}
 In this report we investigate methods for numerically computing the value of
@@ -150,6 +158,11 @@ We explore two general classes of algorithms: quadrature methods, and Monte-Carl
 
   This is implemented in \texttt{pkg/quad/simp.go}, reusing the function for computing steps of the
   trapezoidal approximation.
+
+  Higher order quadrature methods exist. E.g. Gaussian Quadrature, where for an $n^{th}$
+  order method $f(x)$ is evaluated at the roots of the $n^{th}$ order Legendre Polynomial\cite{gauss}.
+  Practical gains from such methods are negligible: for equation \ref{eq:target} we can easily achieve
+  machine accuracy within fractions of a second (section \ref{sec:results}).
 
 \subsection{Monte-Carlo Integration}
   \subsubsection{Importance Sampling}
@@ -281,6 +294,7 @@ We explore two general classes of algorithms: quadrature methods, and Monte-Carl
   For directions consult the \texttt{README.md} file.
 
 \section{Results}
+  \label{sec:results}
   To compute values for equation \ref{eq:target} we use the algorithms outlined in section \ref{sec:algo}.
   Quadrature methods are considered converged at a reported accuracy $\epsilon \le 10^{-6}$.
   For the \is{} schemes we progressively consider accuracies of $\epsilon \le 10^{-3},10^{-4},10^{-5},10^{-6}$.
@@ -290,7 +304,8 @@ We explore two general classes of algorithms: quadrature methods, and Monte-Carl
   For the \apis{} method we use $f(x) = 1$ with support $[a,b]$ and $\pi(x) = |\Psi(x)|^2$.
 
   The resulting values for the integral are given in figure \ref{fig:results}. All the computed values
-  are in agreement and the most accurate result is \final.
+  are in agreement and the most accurate result is \final. The accuracies are reported such that
+  $x = \bar x \pm \epsilon$, since this is easier to compare than relative accuracies.
 
   Note that the accuracies obtained from \is{} are worse than for quadrature methods and require
   significantly more samples. This is due to the asymptotic behavior of the error $\sim \frac{1}{N^4}$
@@ -298,8 +313,11 @@ We explore two general classes of algorithms: quadrature methods, and Monte-Carl
   methods is $\sim \frac{1}{N^{\frac4D}}$ (Simpson). Starting from $D=8$ asymptotic errors for \is{}
   are favorable. Our problem is $D=1$ so quadrature methods perform better as seen in figure \ref{fig:results}.
 
-  The parallelized \is{} implementation takes around $25-30$ns per sample. To achieve $\epsilon \le 10^{-6}$
-  at $2\sigma$ confidence $\sim 10^{12}$ samples are required or about $\sim 6$ hours of runtime\footnotemark.
+  The parallelized \is{} implementation takes around $25-35$ns per sample. To achieve $\epsilon \sim 10^{-5}$
+  at $2\sigma$ confidence $\sim 10^{8}$ samples were required, taking $\sim 3\text{seconds}$. To improve
+  by one order of magnitude and get the desired $\epsilon \sim 10^{-6}$, we expect $100\times$ the
+  samples and runtime. This is indeed the case, as seen in the \is{} result taking
+  $\sim 10\text{minutes}$\footnotemark.
 
   \footnotetext{
     Since the computations are completely independent, this could be cut this down by using multiple computers
@@ -313,21 +331,27 @@ We explore two general classes of algorithms: quadrature methods, and Monte-Carl
   \begin{figure}[ht]
   \centering
   \begin{tabular}{ l | l l l l }
-    \textbf{Method} & \textbf{Value} & \textbf{Accuracy (reported)} & \textbf{Sample Count} & \textbf{Runtime} \\
+    \textbf{Method} &
+    \textbf{Value} &
+    \textbf{Accuracy (reported)} &
+    \textbf{Sample Count} &
+    \textbf{Runtime} \\
     \hline
 
-    Trapezoidal & $0.4976609222761679$  & $6.306742604267335\times10^{-7}$       & $257$      & negligible \\
-    Simpson     & $0.49766113237260257$ & $2.05317862711496\times10^{-9}$        & $129$      & negligible \\
+    Trapezoidal & $0.4976609222761679$  & $6.306742604267335\times10^{-7}$      & $257$         & $560\mu$s     \\
+    Simpson     & $0.49766113237260257$ & $2.05317862711496\times10^{-9}$       & $129$         & $331\mu$s     \\
 
-    Uniform \is & $0.49749275093080847$ & $0.0009987888600436882$                & $606208$   & $17.8$ms   \\
-    Uniform \is & $0.4976236307864889$  & $9.9988154790576\times10^{-05}$        & $60522496$ & $1.62$s    \\
-    Uniform \is & $0.497647454893018$   & $7.778787976918824\times10^{-05}$      & $99991552$ & $2.49$s    \\
+    Uniform \is & $0.49749275093080847$ & $0.0009987888600436882$               & $606208$      & $17.8$ms      \\
+    Uniform \is & $0.4976236307864889$  & $9.9988154790576\times10^{-5}$        & $60522496$    & $1.62$s       \\
+    Uniform \is & $0.497647454893018$   & $7.778787976918824\times10^{-5}$      & $99991552$    & $2.49$s       \\
 
-    Slanted \is & $0.498257793433617$   & $0.0009384751322811317$                & $81920$    & $2.59$ms   \\
-    Slanted \is & $0.4977119148814941$  & $9.99393644049716\times10^{-05}$       & $7274496$  & $212.29$ms \\
-    Slanted \is & $0.49765521455387013$ & $2.695543800022229\times10^{-05}$      & $99991552$ & $2.89$s    \\
+    Slanted \is & $0.498257793433617$   & $0.0009384751322811317$               & $81920$       & $2.59$ms      \\
+    Slanted \is & $0.4977119148814941$  & $9.99393644049716\times10^{-5}$       & $7274496$     & $212.29$ms    \\
+    Slanted \is & $0.49765521455387013$ & $2.695543800022229\times10^{-5}$      & $99991552$    & $2.89$s       \\
 
-    \apis{}     & $0.4975202501301652$  & $0.00021774502243$ (see\footnotemark)  & $606208$   & $18.14$s   \\
+    Slanted \is & $0.4976607485895988$  & $1.9059153608037185\times10^{-6}$     & $19999997952$ & $11$min $45$s \\
+
+    \apis{}     & $0.4975202501301652$  & $0.00021774502243$ (see\footnotemark) & $606208$      & $18.14$s      \\
 
   \end{tabular}
   \caption{
@@ -339,7 +363,7 @@ We explore two general classes of algorithms: quadrature methods, and Monte-Carl
 
   \footnotetext{
     This value is based on the estimate for $Z \approx \bar Z = 1.0002177450224337$. Since
-    $\pi = |\Psi|^2$ is normalized $\epsilon = |Z-\bar Z|$.
+    $\pi = |\Psi|^2$ is normalized $\epsilon = |Z-\bar Z|$\cite{apis}.
   }
 
 \section{Plausibility of Results}
@@ -383,11 +407,7 @@ We explore two general classes of algorithms: quadrature methods, and Monte-Carl
   }{fig:simp}
 
   \subsection{Monte-Carlo Methods}
-
-  % REVISE FROM HERE:
-  ------------------------------------------------------------------------------------------------------------------------
-
-  As the integral $I$ is well-defined, we expect the expected value to converge. Further, as per our
+  As $|\Psi|^2$ is well-behaved, the expected value is well-defined and $= I$. As per our
   analysis in section \ref{sec:algo}, we expect the error on our estimate to behave like
   $\mathcal{O}\left( \frac{\operatorname{var}(\frac fp)}{\sqrt N} \right)$.
 
