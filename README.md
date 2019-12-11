@@ -2,12 +2,13 @@
 
 ## Build instructions
 
-To build and run the project, use `make` or `make project-run`. To only build the project binary,
-use `make project`.
+To build and run the project, use `make` or `make run` (faster, no test). To only build the project
+binary, use `make project`.
 
-To build and run all assignment code with default data a simple `make assignment` should suffice.
+To build and run all assignment code with default data and generate the assignment report a simple
+`make assignment` should suffice.
 
-To generate the submitted reports run `make pdf` and to generate the submitted ZIP archive run `make zip`.
+To generate the submitted report run `make pdf` and to generate the submitted ZIP archive run `make zip`.
 
 ## PNG and other Graph Formats
 

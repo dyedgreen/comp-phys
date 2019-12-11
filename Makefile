@@ -5,7 +5,7 @@ ZIP_NAME = "Roeder_TG_Project2.zip"
 
 # Default target for happy markers
 all: project
-all: project-run
+all: run
 
 # Format go sources
 fmt:
@@ -26,7 +26,7 @@ project: test
 project:
 	go build -o ./project/main ./project
 
-project-run:
+run:
 	go build -o ./project/main ./project
 	./project/main -data
 
@@ -64,6 +64,7 @@ assignment:
 	cp ./assignment/q-5/plot-a.pdf ./pdf/images/assignment-q-5-a.pdf
 	cp ./assignment/q-5/plot-b.pdf ./pdf/images/assignment-q-5-b.pdf
 	cp ./assignment/q-5/plot-c.pdf ./pdf/images/assignment-q-5-c.pdf
+	cd ./pdf && pdflatex ./assignment.tex && bibtex ./assignment.aux && pdflatex ./assignment.tex && pdflatex ./assignment.tex
 
 # Remove any generated files
 clean:
@@ -74,10 +75,8 @@ clean:
 	rm $(ZIP_NAME) testcov.log || :
 
 # Build assignment report
-pdf: assignment
 pdf: project-graphs
 pdf:
-	cd ./pdf && pdflatex ./assignment.tex && bibtex ./assignment.aux && pdflatex ./assignment.tex && pdflatex ./assignment.tex
 	cd ./pdf && pdflatex ./project.tex && bibtex ./project.aux && pdflatex ./project.tex && pdflatex ./project.tex
 
 # Build zip for submission
