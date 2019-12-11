@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
-	"time"
 	"math"
+	"time"
 
 	"github.com/dyedgreen/comp-phys/pkg/casino"
 	"github.com/dyedgreen/comp-phys/pkg/quad"
@@ -19,12 +19,16 @@ func genData() {
 	simp := quad.NewSimpsonIntegral(8)
 	simp.Accuracy(&eps)
 
+	start1 := time.Now()
 	P1, err := quad.Integrate(wave_fn_2, A, B, trap)
+	elapsed1 := time.Now().Sub(start1)
 	if err != nil {
 		panic(err)
 	}
 
+	start2 := time.Now()
 	P2, err := quad.Integrate(wave_fn_2, A, B, simp)
+	elapsed2 := time.Now().Sub(start2)
 	if err != nil {
 		panic(err)
 	}
@@ -33,7 +37,9 @@ func genData() {
 	fmt.Printf("We find P = %v (Trapezoidal)\n        P = %v (Simpson)\n", P1, P2)
 	fmt.Println("Statistics:")
 	fmt.Println(trap.Stats())
+	fmt.Printf("Time elapsed: %v\n", elapsed1)
 	fmt.Println(simp.Stats())
+	fmt.Printf("Time elapsed: %v\n", elapsed2)
 
 	// Monte Carlo Integration
 	accs := []float64{1e-3, 1e-4, 1e-5, 1e-6}

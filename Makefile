@@ -37,6 +37,7 @@ project-graphs:
 	cp ./project/simp-accuracy.pdf ./pdf/images/proj-simp-accuracy.pdf
 	cp ./project/mont-flat-accuracy.pdf ./pdf/images/proj-mont-flat-accuracy.pdf
 	cp ./project/mont-slanted-accuracy.pdf ./pdf/images/proj-mont-slanted-accuracy.pdf
+	cp ./project/mont-stab.pdf ./pdf/images/proj-mont-stab.pdf
 
 # Build assignment binaries
 $(ASSIGNMENTS):

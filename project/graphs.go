@@ -94,7 +94,7 @@ func plotForScheme(title, file string, scheme quad.Integral, theory func(float64
 
 // Generate the nice graphs for the project report, this is slow ...
 func genGraphs() {
-	fmt.Printf("Generating Graphs (format .%v) ...\n", *fileType)
+	fmt.Printf("Generating Accuracy Graphs (format .%v) ...\n", *fileType)
 
 	// Deterministic methods
 	fmt.Println("Plots for quadrature methods ...")

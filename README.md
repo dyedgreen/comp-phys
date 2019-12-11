@@ -17,6 +17,20 @@ wishes to inspect the graphs in some other format (e.g. `.png`), they are free t
 in the `/project` directory. (Run `./main` to see available options and make sure to build the project
 first!)
 
+## Heavy Calculation
+
+There is the option to run a time-intensive calculation. Use the `-heavy` flag when running the
+project binary (i.e. `./main -heavy`). Running this may take some time.
+
+For markers inclined to save time, here is the output of this command:
+
+    Running heavy calculation. This may take a while ...
+    INFO: 20000000000 steps max at 1e-06 target accuracy
+    Result: P = 0.4976607485895988
+    Statistics:
+    &{19999997952 1.9059153608037185e-06 integral did not converge}
+    Time elapsed: 11m44.577711857s (35.22888920028826 nanosecond/sample)
+
 ## Running Tests
 
 To run tests, use `make test`. (To see a code coverage breakdown, use `make cover`.)

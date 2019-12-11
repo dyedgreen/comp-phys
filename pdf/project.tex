@@ -417,6 +417,17 @@ We explore two general classes of algorithms: quadrature methods, and Monte-Carl
 
   This theoretically expected behavior can clearly be seen in figures \ref{fig:mont-flat}, \ref{fig:mont-slant}.
 
+  To investigate the numerical stability of the implementation due to inexact floating-point arithmetic
+  we consider a function which returns $0,1,0,1,0,1,\dots$ sequentially and thus will have an
+  exact average after even numbers of samples. The error incurred by our implementation is
+  $\sim 10^{-15} \ll 10^{-6}$ \footnotemark. We
+  also do not observe significant growth of this error in the number of samples processed as
+  seen in figure \ref{fig:float-error}.
+
+  \footnotetext{
+    Indeed, machine accuracy is $\sim 10^{-16}$, so this value is very close to the theoretical lower bound.
+  }
+
   % Plots Monte-Carlo
   \plot{proj-mont-flat-accuracy}{
     Values obtained for the \is{} method (uniform proposal distribution) plotted against the number
@@ -437,6 +448,13 @@ We explore two general classes of algorithms: quadrature methods, and Monte-Carl
     effect of choosing a proposal more similar to the integrand: compared with figure \ref{fig:mont-flat},
     the error bounds favorably scale by a constant factor.
   }{fig:mont-slant}
+
+  \plot{proj-mont-stab}{
+    Deviation of results given exact arithmetic for our Monte-Carlo expectation estimator. The error
+    does not grow significantly in the
+    number of samples taken and is $\sim 10^{-15} \ll 10^{-6}$. The theoretical lower bound on this
+    error is $\sim 10^{-16}$ for the 64-bit floating points used and is indicated in yellow.
+  }{fig:float-error}
 
 \bibliography{assignment.bib}{}
 \bibliographystyle{plain}
