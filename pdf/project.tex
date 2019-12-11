@@ -6,7 +6,7 @@
 \usepackage{graphicx}
 \usepackage{hyperref}
 \usepackage{cite}
-\usepackage[margin=2cm]{geometry}
+\usepackage[margin=1.8cm]{geometry}
 
 \graphicspath{ {./images/} }
 
@@ -24,19 +24,20 @@
 \abbreviate{\is}{IS}{Importance Sampling}
 
 
-\newcommand{\final}{$I = 0.497661132 \pm 2\times10^{-9}$}
+\newcommand{\finalval}{0.497661132 \pm 2\times10^{-9}}
+\newcommand{\final}{$I = \finalval$}
 
 \begin{document}
 \maketitle
 \abstract{
   Using quadrature and Monte-Carlo integration schemes it is determined that
-  $\int_0^2 \frac{1}{\sqrt{\pi}} e^{-x^2} dx \approx$ \final. We
-  find that for this one dimensional problem, quadrature methods
-  are favorable as they converge much more rapidly. For Monte-Carlo methods
-  we find that the efficiency of methods matches theoretical expectations.
+  $\int_0^2 \frac{1}{\sqrt{\pi}} e^{-x^2} dx = \finalval$. We
+  find that for this one dimensional problem quadrature methods
+  are favorable, converging much more rapidly. The sample efficiency of the
+  used Monte-Carlo methods matches theoretical expectations.
 
-  Specifically, the convergence is $\sim \max(\frac fp)$ for Importance Sampling
-  and slightly improves using adaptive methods.
+  Specifically, the convergence is $\sim \max(\frac fp) \times \frac{1}{\sqrt{N}}$ for Importance Sampling
+  and slightly improves using adaptive sampling methods.
 }
 
 \section{Introduction}
@@ -52,7 +53,6 @@ $|\Psi(x)|^2$ is a normalized Gaussian probability density for which
 very accurate approximations and tabulated values exist. However, for the purposes of this report we
 treat the value of $I$ as unknown and investigate how to justify confidence in the
 obtained results.
-
 A direct comparison with tabulated values can be found in appendix \ref{app:cheat}.
 
 \section{Algorithms}
@@ -67,10 +67,10 @@ We explore two general classes of algorithms: quadrature methods, and Monte-Carl
   and thus\footnotemark
   \begin{equation}
   \int_a^b f(x) dx =
-  \int_a^b f(x_0) + \frac{f(b) - f(a)}{b-a} (x-a) + \mathcal{O}(x^2) dx =
+  \int_a^b f(a) + \frac{f(b) - f(a)}{b-a} (x-a) + \mathcal{O}(x^2) dx =
   \frac{1}{2} h (f(a) + f(b)) + \mathcal{O}(h^3),
   \end{equation}
-  where $h = b-a$ and $x_0 \in [a,b]$.
+  where $h = b-a$.
 
   \footnotetext{
     For analytic functions: $\forall a, b \in \mathbb{R} \exists x_0 \in [a, b]$ s.t.
@@ -96,12 +96,12 @@ We explore two general classes of algorithms: quadrature methods, and Monte-Carl
   us to reduce the time complexity by a factor of $M$, where $M$ is the number of threads
   running concurrently\footnotemark.
 
-  \footnotetext{This is true, since $M$ is limited by the number of cores in our processing unit. Given
+  \footnotetext{This is true since $M$ is limited by the number of cores in our processing unit. Given
   a theoretically infinite amount of truly concurrent threads we would want to choose a scheme that
   combines two numbers at a time, leading to $\log_2(N)$ threads and time complexity. It is clear
   that for any interesting integral this is limited by the number of processing cores available.}
 
-  Further, we can implement a scheme to progressively increases the number of integration steps until
+  Further, we can implement a scheme to progressively increase the number of steps until
   a desired accuracy is reached. A straight-forward way to achieve this is to add mid-way points
   between the samples taken with every iteration:
   \begin{equation}
@@ -113,15 +113,18 @@ We explore two general classes of algorithms: quadrature methods, and Monte-Carl
   ranges over the subdivisions at the $m^{\text{th}}$ step.
 
   An efficient way to estimate the error after a given step, is to compute $\epsilon_m \approx |I_m - I_{m-1}|$
-  \cite{nr}.
+  \cite{nr}\footnotemark.
 
-  This algorithm is implemented in \texttt{pkg/quad/trap.go}. The implementation parallelizes the computation
-  of the summation in equation \ref{eq:trap-rec}, which is implemented in \texttt{pkg/quad/trap\_step.go}.
+  \footnotetext{Note that on should take a number of steps before using this estimate. \cite{nr} recommend
+  $5$ steps.}
+
+  This algorithm is implemented in \texttt{/pkg/quad/trap.go}. The implementation parallelizes the computation
+  for equation \ref{eq:trap-rec}, which is implemented in \texttt{/pkg/quad/trap\_step.go}.
   The \texttt{quad} package defines a generic \texttt{Integral} interface, which the algorithm implements.
 
   The parallel algorithm computing the steps assumes that computing $f(x)$ is non-trivial, in the sense
   that is takes longer to compute than adding the result to the integral total. Thus, the
-  algorithm has a worst case runtime of $\mathcal{O}(N)$, and best case runtime of $\mathcal{O}(\frac NM)$.
+  algorithm has a worst case runtime of $\mathcal{O}(N)$ and best case runtime of $\mathcal{O}(\frac NM)$.
 
   \subsubsection{Simpson Rule}
   This quadrature method is closely related to the Trapezoidal Rule\footnotemark. Consider
@@ -136,7 +139,7 @@ We explore two general classes of algorithms: quadrature methods, and Monte-Carl
   \frac{1}{b-a} \int_a^b q(x) dx = \alpha q(a) + \beta q(\frac{a+b}{2}) + \gamma q(b),
   \end{equation}
   We can determine the coefficients $\alpha$, $\beta$, and $\gamma$ such that this holds for any
-  quadratic function $q(x)$. Further, this will then hold for $q(x)$ being cubic as well. Thus
+  quadratic function $q(x)$. Further, this will then hold for $q(x)$ being cubic as well\cite{nr}. Thus
 
   \begin{equation}
   \begin{split}
@@ -146,7 +149,7 @@ We explore two general classes of algorithms: quadrature methods, and Monte-Carl
   \end{equation}
   where $h = b-a$ and we used that $\alpha = \gamma = \frac{1}{6}$ and $\beta = \frac{4}{6}$.
 
-  As before, the total error is $\mathcal{O}(h^4)$ when summing this rule over $N$ segments, where
+  As before, the total error is $\mathcal{O}(h^4)$ summing this rule over $N$ segments, where
   $h = \frac{b-a}{N}$.
 
   It should be noted that employing the refinement scheme outlined in section \ref{sec:trap} we
@@ -156,11 +159,11 @@ We explore two general classes of algorithms: quadrature methods, and Monte-Carl
   I_m^{\text{Simpson}} = \frac{4}{3} I_{m+1}^{\text{Trapezoidal}} - \frac{1}{3} I_m^{\text{Trapezoidal}}.
   \end{equation}
 
-  This is implemented in \texttt{pkg/quad/simp.go}, reusing the function for computing steps of the
+  This is implemented in \texttt{/pkg/quad/simp.go}, reusing the function for computing steps of the
   trapezoidal approximation.
 
-  Higher order quadrature methods exist. E.g. Gaussian Quadrature, where for an $n^{th}$
-  order method $f(x)$ is evaluated at the roots of the $n^{th}$ order Legendre Polynomial\cite{gauss}.
+  Higher order quadrature methods exist. E.g. Gaussian Quadrature where, for an $n^{th}$
+  order method, $f(x)$ is evaluated at the roots of the $n^{th}$ order Legendre Polynomial\cite{gauss}.
   Practical gains from such methods are negligible: for equation \ref{eq:target} we can easily achieve
   machine accuracy within fractions of a second (section \ref{sec:results}).
 
@@ -253,15 +256,15 @@ We explore two general classes of algorithms: quadrature methods, and Monte-Carl
   where $Z = \int_\chi \pi(\vec{x}) d\vec{x}$ is the partition function.
 
   To do so, a family of proposal distributions is introduced. We require that each proposal distribution
-  $q_i$ is parameterized by its expectation\cite{apis}\footnotemark.
+  $q_i$ is parameterized by its expectation $\mu_i$\cite{apis}\footnotemark.
 
   \footnotetext{
     We could also adapt higher order moments, but only updating the first moment is the most numerically
     stable approach in general\cite{apis}.
   }
 
-  Initially $q_i^{(t=0)}$ are chosen at random, or based on some knowledge of the problem. Then, for a number
-  of iterations $T_a$ we perform \is{} to estimate $I$, $Z$, $\mu_i$ by drawing a one sample from each
+  Initially $q_i^{(t=0)}$ are chosen at random or based on some knowledge of the problem. Then, for a number
+  of iterations $T_a$ we perform \is{} to estimate $I$, $Z$, $\mu_i \sim \pi$ by drawing a one sample from each
   proposal distribution per iteration. Then we use $\mu_i$ to update $q_i^{(t)}$. This is repeated
   until the desired convergence criterion is meet. The estimates use online formulae very similar
   to what was discussed in \ref{sec:mon-is}.
@@ -274,7 +277,7 @@ We explore two general classes of algorithms: quadrature methods, and Monte-Carl
   The source code for this project encompasses more than $3500$ lines of code\footnotemark. To ensure
   this code implements the algorithms in section \ref{sec:algo} correctly, we utilize unit-tests.
   Notice that this is separate from verifying specific results. Even when all algorithms are
-  implemented correctly they may still fail to converge correctly for a number of reasons\cite{nr}.
+  implemented correctly they may still fail to converge for a number of reasons\cite{nr}.
 
   \footnotetext{
     As reported by \texttt{wc -l \$(find . -name "*.go")}.
@@ -286,8 +289,8 @@ We explore two general classes of algorithms: quadrature methods, and Monte-Carl
   feedback for obvious mistakes. Tests can be found in files named \texttt{*\_test.go}.
 
   We test \texttt{casino} and \texttt{quad} routines using the same approach: knowing analytic
-  results for some integral or expected value and variance, we compute estimates
-  of these values. We then verify, that the integral values and accuracies reported are consistent with
+  results for some integral or expected value and variance we compute estimates
+  of these values. We then verify, that the values and accuracies reported are consistent with
   analytic results.
 
   The markers are invited to run tests and inspect the line-by-line test coverage themselves.
@@ -303,7 +306,7 @@ We explore two general classes of algorithms: quadrature methods, and Monte-Carl
   $\gamma$ set to the appropriate normalizing factor for support $[a,b]$.
   For the \apis{} method we use $f(x) = 1$ with support $[a,b]$ and $\pi(x) = |\Psi(x)|^2$.
 
-  The resulting values for the integral are given in figure \ref{fig:results}. All the computed values
+  The resulting values are given in figure \ref{fig:results}. All the computed values
   are in agreement and the most accurate result is \final. The accuracies are reported such that
   $x = \bar x \pm \epsilon$, since this is easier to compare than relative accuracies.
 
@@ -325,8 +328,8 @@ We explore two general classes of algorithms: quadrature methods, and Monte-Carl
     (Or credits with AWS, but I don't have those either.)
   }
 
-  \apis{} is more sample efficient than \is{}, but is not implemented as a parallel algorithm and
-  so has significantly longer run-time.
+  \apis{} is more sample efficient than \is{} but is not implemented as a parallel algorithm and
+  so has significantly longer run-times.
 
   \begin{figure}[ht]
   \centering
@@ -376,7 +379,10 @@ We explore two general classes of algorithms: quadrature methods, and Monte-Carl
   All values reported (figure \ref{fig:results}) agree to within the quoted accuracy. Further, unit
   testing convinced us of the correctness of our implementation (section \ref{sec:tests}). We also note
   that the integrand is a symmetric, normalized distribution which decays exponentially in $x$.
-  $I \approx \frac12$ is thus physically plausible.
+  $I \approx \frac12$ is thus plausible.
+
+  Physically this also makes sense. $\Psi$ is the ground state of a harmonic potential, which we expect
+  to be localized around the origin.
 
   \subsection{Quadrature Methods}
   As seen in section \ref{sec:algo}, the Trapezoidal and Simpson's method have errors
@@ -456,12 +462,13 @@ We explore two general classes of algorithms: quadrature methods, and Monte-Carl
     error is $\sim 10^{-16}$ for the 64-bit floating points used and is indicated in yellow.
   }{fig:float-error}
 
+\pagebreak
 \bibliography{assignment.bib}{}
 \bibliographystyle{plain}
 
 \appendix{}
 
-\section{Comparison with Tabulated Values}
+\section{Comparison with Tabulated Value}
 \label{app:cheat}
 From tables we obtain
 \begin{equation}
@@ -482,7 +489,7 @@ S_{n+1} = \alpha S_n + \beta,
 \end{equation}
 where $S_n$, $\alpha$, and $\beta$ are part of a modular group under addition and multiplication.
 
-We may notice, that the quality of the random bits produced increases as we consider higher bits
+We may notice that the quality of the random bits produced increases as we consider higher bits
 in the result\cite{pcg}. The idea of the PCG family of generators is to use this fact by
 applying families of permutations to a subset of the produced bits, where the permutation family
 members are selected `randomly' using the highest order bits.
