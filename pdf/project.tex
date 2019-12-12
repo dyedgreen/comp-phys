@@ -7,7 +7,7 @@
 \usepackage{hyperref}
 \usepackage{cite}
 \usepackage{notoccite}
-\usepackage[margin=1.8cm]{geometry}
+\usepackage[margin=1.7cm]{geometry}
 
 \graphicspath{ {./images/} }
 
@@ -33,9 +33,9 @@
 \abstract{
   Using quadrature and Monte-Carlo integration schemes it is determined that
   $\int_0^2 \frac{1}{\sqrt{\pi}} e^{-x^2} dx = \finalval$. We
-  find that for this one dimensional problem quadrature methods
+  find that for this (one dimensional) problem quadrature methods
   are favorable, converging much more rapidly. The sample efficiency of the
-  used Monte-Carlo methods matches theoretical expectations.
+  Monte-Carlo methods matches theoretical expectations.
 
   Specifically, the convergence is $\sim \max(\frac fp) \times \frac{1}{\sqrt{N}}$ for Importance Sampling
   and slightly improves using adaptive sampling methods.
@@ -48,7 +48,7 @@ In this report we investigate methods for numerically computing the value of
 \label{eq:target}
 I = \int_a^b |\Psi(x)|^2 dx = \int_a^b \frac{1}{\sqrt{\pi}} e^{-x^2} dx,
 \end{equation}
-where we are interested in the case $a = 0$, $b = 2$.
+where $a = 0$, $b = 2$.
 
 $|\Psi(x)|^2$ is a normalized Gaussian probability density for which
 very accurate approximations and tabulated values exist. However, for the purposes of this report we
@@ -58,7 +58,7 @@ A direct comparison with tabulated values can be found in appendix \ref{app:chea
 
 \section{Algorithms}
 \label{sec:algo}
-We explore two general classes of algorithms: quadrature methods, and Monte-Carlo integration.
+We explore two general classes of algorithms: quadrature methods and Monte-Carlo integration.
 
 \subsection{Quadrature Methods}
   \subsubsection{Trapezoidal Rule}
@@ -68,7 +68,7 @@ We explore two general classes of algorithms: quadrature methods, and Monte-Carl
   and thus\footnotemark
   \begin{equation}
   \int_a^b f(x) dx =
-  \int_a^b f(a) + \frac{f(b) - f(a)}{b-a} (x-a) + \mathcal{O}(x^2) dx =
+  \int_a^b f(a) + f^\prime(a) (x-a) + \mathcal{O}(x^2) dx =
   \frac{1}{2} h (f(a) + f(b)) + \mathcal{O}(h^3),
   \end{equation}
   where $h = b-a$.
@@ -113,17 +113,19 @@ We explore two general classes of algorithms: quadrature methods, and Monte-Carl
   $h_m = \frac{h_{m-1}}{2}$, and $x^{(m)}_i$
   ranges over the subdivisions at the $m^{\text{th}}$ step.
 
-  An efficient way to estimate the error after a given step, is to compute $\epsilon_m \approx |I_m - I_{m-1}|$
+  An efficient way to estimate the error after a given step is to compute $\epsilon_m \approx |I_m - I_{m-1}|$
   \cite{nr}\footnotemark.
 
-  \footnotetext{Note that on should take a number of steps before using this estimate. \cite{nr} recommend
-  $5$ steps.}
+  \footnotetext{
+    Note that on should take a number of steps before using this estimate.
+    William H. Press et al. \cite{nr} recommend $5$ steps.
+  }
 
   This algorithm is implemented in \texttt{/pkg/quad/trap.go}. The implementation parallelizes the computation
   for equation \ref{eq:trap-rec}, which is implemented in \texttt{/pkg/quad/trap\_step.go}.
-  The \texttt{quad} package defines a generic \texttt{Integral} interface, which the algorithm implements.
+  The \texttt{quad} package defines a generic \texttt{Integral} interface which the algorithm implements.
 
-  The parallel algorithm computing the steps assumes that computing $f(x)$ is non-trivial, in the sense
+  The parallel algorithm computing the steps assumes that computing $f(x)$ is non-trivial in the sense
   that is takes longer to compute than adding the result to the integral total. Thus, the
   algorithm has a worst case runtime of $\mathcal{O}(N)$ and best case runtime of $\mathcal{O}(\frac NM)$.
 
@@ -153,8 +155,8 @@ We explore two general classes of algorithms: quadrature methods, and Monte-Carl
   As before, the total error is $\mathcal{O}(h^4)$ summing this rule over $N$ segments, where
   $h = \frac{b-a}{N}$.
 
-  It should be noted that employing the refinement scheme outlined in section \ref{sec:trap} we
-  obtain\cite{nr}:
+  It should be noted that employing the refinement scheme outlined in section \ref{sec:trap} one
+  obtains\cite{nr}:
 
   \begin{equation}
   I_m^{\text{Simpson}} = \frac{4}{3} I_{m+1}^{\text{Trapezoidal}} - \frac{1}{3} I_m^{\text{Trapezoidal}}.
@@ -498,5 +500,8 @@ members are selected `randomly' using the highest order bits.
 The \texttt{PCG XSL RR 128/64} generator we used applies a rotation on an XOR shifted part of the
 internal state, produces 64 bit random numbers, and uses 128 bits of internal state (giving a
 period of $2^{128} \approx 3.40282\times10^{38}$)\cite{pcg}.
+
+In general, PCG family algorithms have excellent statistical and computational properties, which
+make them superior to other known generators such as the Mersenne Twister\cite{pcg}.
 
 \end{document}
