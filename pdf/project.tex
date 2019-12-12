@@ -258,22 +258,21 @@ We explore two general classes of algorithms: quadrature methods and Monte-Carlo
   \end{equation}
   where $Z = \int_\chi \pi(\vec{x}) d\vec{x}$ is the partition function.
 
-  To do so, a family of proposal distributions is introduced. We require that each proposal distribution
+  We introduce a family of proposal distributions, for which we require that each proposal distribution
   $q_i$ is parameterized by its expectation $\mu_i$\cite{apis}\footnotemark.
 
   \footnotetext{
-    We could also adapt higher order moments, but only updating the first moment is the most numerically
-    stable approach in general\cite{apis}.
+    We could also adapt higher order moments, but that would be a less stable process\cite{apis}.
   }
 
   Initially $q_i^{(t=0)}$ are chosen at random or based on some knowledge of the problem. Then, for a number
-  of iterations $T_a$ we perform \is{} to estimate $I$, $Z$, $\mu_i \sim \pi$ by drawing a one sample from each
+  of iterations $T_a$, we perform \is{} to estimate $I$, $Z$, $\mu_i \sim \pi$ by drawing a one sample from each
   proposal distribution per iteration. Then we use $\mu_i$ to update $q_i^{(t)}$. This is repeated
-  until the desired convergence criterion is meet. The estimates use online formulae very similar
+  until the desired convergence criterion is meet. Estimates use online formulae very similar
   to what was discussed in \ref{sec:mon-is}.
 
-  This algorithm is implemented in \texttt{/pkg/casino/apis.go} using families composed of Normal distributions.
-  For more details on the algorithm and the precise method of computing the estimates, see\cite{apis}.
+  This algorithm is implemented in \texttt{/pkg/casino/apis.go} using families of Normal distributions.
+  For more details on the algorithm and the precise method of computing the estimates see\cite{apis}.
 
 \section{Ensuring Implementation Correctness}
   \label{sec:tests}
