@@ -19,7 +19,7 @@ func genStabilityGraph() {
 	fmt.Println("Plots for stability ...")
 
 	const points = 100
-	const maxSteps = 1000000
+	const maxSteps = 5000000
 
 	mont := quad.NewUniformMonteCarloIntegral(8, 8, casino.Noise(64))
 

@@ -285,8 +285,8 @@ We explore two general classes of algorithms: quadrature methods and Monte-Carlo
     As reported by \texttt{wc -l \$(find . -name "*.go")}.
   }
 
-  Implementing these tests, we generally aim for $\ge 70\%$ coverage\footnote{Although
-  we take the liberty to omit tests for some trivial parts of the code base}. By maintaining an extensive
+  Implementing these tests we generally aim for $\ge 70\%$ coverage\footnote{Although
+  we take the liberty to omit tests for some trivial parts of the code base.}. By maintaining an extensive
   suite of tests we can also confidently re-factor code during the development process, getting immediate
   feedback for obvious mistakes. Tests can be found in files named \texttt{*\_test.go}.
 
@@ -295,7 +295,7 @@ We explore two general classes of algorithms: quadrature methods and Monte-Carlo
   of these values. We then verify, that the values and accuracies reported are consistent with
   analytic results.
 
-  The markers are invited to run tests and inspect the line-by-line test coverage themselves.
+  The markers are invited to run tests and inspect line-by-line test coverage themselves.
   For directions consult the \texttt{README.md} file.
 
 \section{Results}
@@ -306,7 +306,10 @@ We explore two general classes of algorithms: quadrature methods and Monte-Carlo
   We compare two different proposal functions: a uniform distribution with support $[a,b] = [0,2]$ and
   a slanted distribution $\gamma(\alpha x + \beta)$ with $\alpha = -0.48$, $\beta = 0.98$, and
   $\gamma$ set to the appropriate normalizing factor for support $[a,b]$.
-  For the \apis{} method we use $f(x) = 1$ with support $[a,b]$ and $\pi(x) = |\Psi(x)|^2$.
+  For the \apis{} method we use $f(x) = 1$ with support $[a,b]$ and $\pi(x) = |\Psi(x)|^2$, as this
+  is the more stable choice\footnotemark.
+
+  \footnotetext{Compared to $f(x) = |\Psi(x)|^2$, $\pi(x) = \frac{1}{b-a}$.}
 
   The resulting values are given in figure \ref{fig:results}. All the computed values
   are in agreement and the most accurate result is \final. The accuracies are reported such that
@@ -319,7 +322,7 @@ We explore two general classes of algorithms: quadrature methods and Monte-Carlo
   are favorable. Our problem is $D=1$ so quadrature methods perform better as seen in figure \ref{fig:results}.
 
   The parallelized \is{} implementation takes around $25-35$ns per sample. To achieve $\epsilon \sim 10^{-5}$
-  at $2\sigma$ confidence $\sim 10^{8}$ samples were required, taking $\sim 3\text{seconds}$. To improve
+  at $2\sigma$ confidence $\sim 10^{8}$ samples were required, taking $\sim 3\text{ seconds}$. To improve
   by one order of magnitude and get the desired $\epsilon \sim 10^{-6}$, we expect $100\times$ the
   samples and runtime. This is indeed the case, as seen in the \is{} result taking
   $\sim 10\text{minutes}$\footnotemark.
@@ -361,7 +364,7 @@ We explore two general classes of algorithms: quadrature methods and Monte-Carlo
   \end{tabular}
   \caption{
     Results for different algorithms. All results agree to within the quoted accuracy.
-    From these, we obtain a final value of \final{} (Simpson result).
+    From these, we obtain a final value of \final{} (Simpson).
   }
   \label{fig:results}
   \end{figure}
@@ -403,14 +406,14 @@ We explore two general classes of algorithms: quadrature methods and Monte-Carlo
   \plot{proj-trap-accuracy}{
     Values obtained for the Trapezoidal method plotted against the number function evaluations required. The red
     error-bar graph shows the value computed for each step and the associated error, the green line
-    shows the final converged value. The theoretical error bounds are shown in yellow. The reported errors
+    shows the final converged value. The theoretical error bounds are shown in yellow. Reported errors
     follow the theoretical behavior very closely and all estimates lie within the theoretically expected range.
   }{fig:trap}
 
   \plot{proj-simp-accuracy}{
     Values obtained for the Simpson method plotted against the number function evaluations required. The red
     error-bar graph shows the value computed for each step and the associated error, the green line
-    shows the final converged value. The theoretical error bounds are shown in yellow. The reported errors
+    shows the final converged value. The theoretical error bounds are shown in yellow. Reported errors
     follow the theoretical behavior very closely and all estimates lie within the theoretically expected range.
   }{fig:simp}
 
@@ -428,7 +431,7 @@ We explore two general classes of algorithms: quadrature methods and Monte-Carlo
   To investigate the numerical stability of the implementation
   we consider a function which returns $0,1,0,1,0,1,\dots$ sequentially and thus will have an
   exact average after even numbers of samples. The error incurred by our implementation is
-  $\sim 10^{-15} \ll 10^{-6}$ \footnotemark. We
+  $\sim 10^{-14} \ll 10^{-6}$ \footnotemark. We
   also do not observe significant growth of this error in the number of samples processed as
   seen in figure \ref{fig:float-error}.
 
@@ -441,7 +444,7 @@ We explore two general classes of algorithms: quadrature methods and Monte-Carlo
     Values obtained for the \is{} method (uniform proposal distribution) plotted against the number
     function evaluations required. The red
     error-bar graph shows the value computed for each step and the associated error, the green line
-    shows the final converged value. The theoretical error bounds are shown in yellow. The reported errors
+    shows the final converged value. The theoretical error bounds are shown in yellow. Reported errors
     follow the theoretical behavior very closely and all estimates lie within the theoretically expected range.
     All reported errors correspond to a $2\sigma$ confidence interval.
   }{fig:mont-flat}
@@ -450,7 +453,7 @@ We explore two general classes of algorithms: quadrature methods and Monte-Carlo
     Values obtained for the \is{} method (slanted proposal distribution) plotted against the number
     function evaluations required. The red
     error-bar graph shows the value computed for each step and the associated error, the green line
-    shows the final converged value. The theoretical error bounds are shown in yellow. The reported errors
+    shows the final converged value. The theoretical error bounds are shown in yellow. Reported errors
     follow the theoretical behavior very closely and all estimates lie within the theoretically expected range.
     All reported errors correspond to a $2\sigma$ confidence interval. This graph nicely demonstrates the
     effect of choosing a proposal more similar to the integrand: compared with figure \ref{fig:mont-flat},
@@ -460,8 +463,8 @@ We explore two general classes of algorithms: quadrature methods and Monte-Carlo
   \plot{proj-mont-stab}{
     Deviation of results from exact arithmetic for our Monte-Carlo expectation estimator. The error
     does not grow significantly in the
-    number of samples taken and is $\sim 10^{-15} \ll 10^{-6}$. The theoretical lower bound on this
-    error is $\sim 10^{-16}$ for the 64-bit floating points used and is indicated in yellow.
+    number of samples taken and is $\sim 10^{-14} \ll 10^{-6}$. The theoretical lower bound on this
+    error is $\sim 10^{-16}$ for 64-bit floating point arithmetic and is indicated in yellow.
   }{fig:float-error}
 
 \pagebreak
@@ -500,7 +503,7 @@ The \texttt{PCG XSL RR 128/64} generator we used applies a rotation on an XOR sh
 internal state, produces 64 bit random numbers, and uses 128 bits of internal state (giving a
 period of $2^{128} \approx 3.40282\times10^{38}$)\cite{pcg}.
 
-In general, PCG family algorithms have excellent statistical and computational properties, which
-make them superior to other known generators such as the Mersenne Twister\cite{pcg}.
+In general, PCG family algorithms have excellent statistical and computational properties,
+which make them superior to other well known generators such as the Mersenne Twister\cite{pcg}.
 
 \end{document}
